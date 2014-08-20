@@ -5,8 +5,74 @@
 #include <unistd.h>
 #include <errno.h>
 
+struct readset {
+    char *name;
+    char **filenames;
+    int num_files;
+};
+
+struct readset **read_sets_file(char *filename) {
+    struct readset **sets = calloc(256, sizeof(struct readset));
+    FILE *fp;
+    char line[4096];
+    fp = fopen(filename, "r");
+    if(fp == NULL) {
+        fprintf(stderr, "Could not open file \"%s\" for reading\n", filename);
+        exit(EBADF);
+    }
+    int i = 0;
+    int j = 0;
+    while(fgets(line, sizeof(line), fp)) {
+        // Extract the set name and filenames -- format is as follows
+        // set_name: file_1; file_2; file_3; file_4
+        // This method is a bit of a beast, but it works.
+        j = 0;
+        while(line[++j] != ':');
+        char *name = calloc(j, sizeof(char));
+        strncpy(name, line, j + 1);
+        name[j] = '\0';
+        struct readset *set = calloc(1, sizeof(struct readset));
+        set->name = name;
+        char **filenames = calloc(256, sizeof(char*));
+        while(line[j] == ' ' || line[j] == ':') j++;
+        int k = j;
+        while(line[++k] != '\0');
+        char *p = calloc(k - j, sizeof(char));
+        strncpy(p, line + j, k - j + 1);
+        p[k - j] = '\0';
+        int f = 0;
+        int newfname = 1;
+        int len = strlen(p);
+        char *filename = p;
+        while(*p) {
+            if(*p == ' ' || *p == '\n' || *p == ';') {
+                *p = '\0';
+            }
+            p++;
+        }
+        newfname = 1;
+        for(j = 0; j < len; j++) {
+            if(filename[j] == '\0') {
+                newfname = 1;
+            } else if(newfname) {
+                filenames[f] = filename + j;
+                f++;
+                newfname = 0;
+            }
+        }
+        set->num_files = f;
+        set->filenames = filenames;
+        sets[i] = set;
+        i++;
+    }
+    int num_sets = i;
+    sets[num_sets] = NULL;
+    return sets;
+}
+
 struct commet_job {
-    char *config_file;
+    struct readset **sets;
+    int num_sets;
     char *output_directory;     /* -o */
     int kmer_size;              /* -k */
     float min_entropy;          /* -e */
@@ -28,7 +94,7 @@ struct commet_job *default_commet_job(void) {
     return settings;
 }
 
-void print_settings(struct commet_job *settings) {
+void print_commet_job(struct commet_job *settings) {
     printf("settings->output_directory   = \"%s\";\n",
             settings->output_directory);
     printf("settings->kmer_size          = %i;\n",
@@ -43,6 +109,29 @@ void print_settings(struct commet_job *settings) {
             settings->max_n_in_read);
     printf("settings->max_reads_in_set   = %llu;\n",
             settings->max_reads_in_set);
+    printf("settings->sets               = {\n");
+    int i = 0;
+    for(i = 0; i < settings->num_sets; i++) {
+        struct readset *set = settings->sets[i];
+        printf("\t\"%s\": [\n", set->name);
+        int j = 0;
+        for(j = 0; j < set->num_files; j++) {
+            printf("\t\t\"%s\",\n", set->filenames[j]);
+        }
+        printf("\t],\n");
+    }
+    printf("}\n");
+}
+
+void print_usage(void) {
+    printf("./cpr config.txt  ");
+    printf("[-o output_directory] ");
+    printf("[-k kmer_size] ");
+    printf("[-e min_entropy] ");
+    printf("[-t min_shared_kmers] ");
+    printf("[-l min_length_of_read] ");
+    printf("[-n max_n_in_read] ");
+    printf("[-m max_reads_in_set]\n");
 }
 
 struct commet_job *get_settings(int argc, char **argv) {
@@ -56,7 +145,39 @@ struct commet_job *get_settings(int argc, char **argv) {
             case 'l':
                 sscanf(optarg, "%i", &(settings->min_length_of_read));
                 break;
+            case 'k':
+                sscanf(optarg, "%i", &(settings->min_length_of_read));
+                break;
+            case 'm':
+                sscanf(optarg, "%i", &(settings->min_length_of_read));
+                break;
+            case 'o':
+                sscanf(optarg, "%i", &(settings->min_length_of_read));
+                break;
+            case 'n':
+                sscanf(optarg, "%i", &(settings->min_length_of_read));
+                break;
+            case 't':
+                sscanf(optarg, "%i", &(settings->min_length_of_read));
+                break;
+            case 'h':
+                print_usage();
+                exit(EXIT_SUCCESS);
+                break;
+            case '?':
+                printf("%s", optarg);
+                break;
         }
+    }
+    if(argc == 2) {
+        char *config_filename = argv[1];
+        struct readset **sets = read_sets_file(config_filename);
+        int num_sets = 0;
+        // Count the sets
+        while(sets[num_sets++]);
+        num_sets--;
+        settings->sets = sets;
+        settings->num_sets = num_sets;
     }
     return settings;
 }
