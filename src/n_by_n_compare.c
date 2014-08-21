@@ -193,14 +193,10 @@ int main(int argc, char **argv) {
             strcpy(bvfname, _bvfname);
             fafnames[k] = fafname;
             bvfnames[k] = bvfname;
-            if(DEBUG_LEVEL >= 2) printf("bvfnames[%i] = %s\n", k, bvfnames[k]);
             k++;
         }
     }
     pid_t *pids_i = calloc(num_files, sizeof(pid_t));
-    for(i = 0; i < num_files; i++) {
-        if(DEBUG_LEVEL >= 2) printf("bvfnames[%i] = %s\n", i, bvfnames[i]);
-    }
     for(i = 0; i < num_files; i++) {
         pid_t pid_i;
         pid_i = fork();
@@ -208,7 +204,6 @@ int main(int argc, char **argv) {
             perror("Fork failed.");
             exit(1);
         } else if(pid_i == 0) {
-            if(DEBUG_LEVEL >= 2) printf("bvfnames[%i] = %s\n", i, bvfnames[i]);
             if(file_exists(bvfnames[i])) {
                 printf("Using existing file %s.\n", bvfnames[i]);
             } else {
