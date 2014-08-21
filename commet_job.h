@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include "debug.h"
 
 struct readset {
     char *name;
@@ -180,7 +181,7 @@ struct commet_job *get_settings(int argc, char **argv) {
                 break;
         }
     }
-    if(argc > optind) {
+    if(argc >= optind) {
         char *config_filename = argv[optind];
         struct readset **sets = read_sets_file(config_filename);
         int num_sets = 0;
@@ -190,5 +191,7 @@ struct commet_job *get_settings(int argc, char **argv) {
         settings->sets = sets;
         settings->num_sets = num_sets;
     }
+
+    if(DEBUG_LEVEL >= 1) print_commet_job(settings);
     return settings;
 }

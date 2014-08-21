@@ -11,13 +11,14 @@
 #include "hash2.h"
 #include "counter.h"
 
+
 uint64_t kmer_mask(int kmer_size) {
     uint64_t mask = (1ll << (uint64_t)kmer_size) - 1;
     return mask;
 }
 
 uint64_t get_num_kmers(char *fafname, char *bvfname, int kmer_size) {
-    printf("Counting kmers in %s.\n", fafname);
+    if(DEBUG_LEVEL >= 1) printf("Counting kmers in %s.\n", fafname);
     FILE *fafp; // Fasta file pointer
     fafp = fopen(fafname, "r");
     struct bit_vector *bv = read_bit_vector(bvfname);
@@ -37,6 +38,7 @@ uint64_t get_num_kmers(char *fafname, char *bvfname, int kmer_size) {
             }
         }
     };
+    if(DEBUG_LEVEL >= 1) printf("Done counting kmers in %s.\n", fafname);
     return num_kmers;
 }
 
@@ -85,6 +87,7 @@ void index_read_in_hash(struct hash *h, char* read, int kmer_size) {
 
 void index_file(struct commet_job *settings, struct hash *h, 
         char *fafname, char * bvfname) {
+    if(DEBUG_LEVEL >= 1) printf("Indexing reads in %s.\n", fafname);
     FILE *fp;
     fp = fopen(fafname, "r");
     char read[65536];
@@ -100,6 +103,7 @@ void index_file(struct commet_job *settings, struct hash *h,
             readnum++;
         }
     }
+    if(DEBUG_LEVEL >= 1) printf("Done indexing reads in %s.\n", fafname);
     return;
 }
 
@@ -127,6 +131,7 @@ struct counter *search_seq_in_hash(struct hash *h, char* seq, int kmer_size) {
 
 struct bit_vector *search_file(struct commet_job *settings, struct hash *h,
         char *fafname, char * bvfname) {
+    if(DEBUG_LEVEL >= 1) printf("Searching reads in %s.\n", fafname);
     FILE *fp;
     fp = fopen(fafname, "r");
     char read[65536];
@@ -157,12 +162,13 @@ struct bit_vector *search_file(struct commet_job *settings, struct hash *h,
             readnum++;
         }
     }
+    if(DEBUG_LEVEL >= 1) printf("Done searching reads in %s.\n", fafname);
     return sbv;
 }
 
 int main(int argc, char **argv) {
     struct commet_job *settings = get_settings(argc, argv);
-    print_commet_job(settings);
+    if(DEBUG_LEVEL >= 1) print_commet_job(settings);
     int i = 0;
     int j = 0;
     int k = 0;
@@ -208,7 +214,7 @@ int main(int argc, char **argv) {
                     char outfilename[4096];
                     sprintf(outfilename, "%s/%s_in_%s.bv", settings->output_directory, fafnames[j], fafnames[i]);
                     bv_save_to_file(sbv, outfilename);
-                    printf("Wrote to %s\n", outfilename);
+                    if(DEBUG_LEVEL >= 1) printf("Wrote to %s\n", outfilename);
                     exit(EXIT_SUCCESS);
                 } else {
                     pids_j[j] = pid_j;
