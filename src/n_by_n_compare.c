@@ -216,6 +216,8 @@ int main(int argc, char **argv) {
         } else {
             if(DEBUG_LEVEL >= 2) printf("I am the parent.\n");
             pids_i[i] = pid_i;
+            int status;
+            waitpid(pids_i[i], &status, 0);
         }
     }
     for(i = 0; i < num_files; i++) {
