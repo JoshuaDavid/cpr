@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
                 // quickly, but probably shouldn't be used
                 // for large datasets.
                 int status;
-                waitpid(pid_i, status, 0);
+                waitpid(pid_i, &status, 0);
             }
         }
     }
