@@ -182,35 +182,50 @@ int main(int argc, char **argv) {
             k++;
         }
     }
+    pid_t *pids_i = calloc(num_files, sizeof(pid_t));
     for(i = 0; i < num_files; i++) {
-        uint64_t num_kmers = get_num_kmers(fafnames[i], bvfnames[i], 
-                settings->kmer_size);
-        struct hash *h = hash_create(num_kmers);
-        index_file(settings, h, fafnames[i], bvfnames[i]);
-        pid_t *pids_j = calloc(num_files, sizeof(pid_t));
-        for(j = 0; j < num_files; j++) {
-            pid_t pid_j;
-            pid_j = fork();
-            if(pid_j == -1) {
-                perror("Fork failed.");
-                exit(1);
-            } else if(pid_j == 0) {
-                // Is child process
-                struct bit_vector *sbv = search_file(settings, h, fafnames[j], bvfnames[j]);
-                char outfilename[4096];
-                sprintf(outfilename, "%s/%s_in_%s.bv", settings->output_directory, fafnames[j], fafnames[i]);
-                bv_save_to_file(sbv, outfilename);
-                printf("Wrote to %s\n", outfilename);
-                exit(EXIT_SUCCESS);
-            } else {
-                pids_j[j] = pid_j;
+        pid_t pid_i;
+        pid_i = fork();
+        if(pid_i == -1) {
+            perror("Fork failed.");
+            exit(1);
+        } else if(pid_i == 0) {
+            uint64_t num_kmers = get_num_kmers(fafnames[i], bvfnames[i], 
+                    settings->kmer_size);
+            struct hash *h = hash_create(num_kmers);
+            index_file(settings, h, fafnames[i], bvfnames[i]);
+            pid_t *pids_j = calloc(num_files, sizeof(pid_t));
+            for(j = 0; j < num_files; j++) {
+                pid_t pid_j;
+                pid_j = fork();
+                if(pid_j == -1) {
+                    perror("Fork failed.");
+                    exit(1);
+                } else if(pid_j == 0) {
+                    // Is child process
+                    struct bit_vector *sbv = search_file(settings, h, fafnames[j], bvfnames[j]);
+                    char outfilename[4096];
+                    sprintf(outfilename, "%s/%s_in_%s.bv", settings->output_directory, fafnames[j], fafnames[i]);
+                    bv_save_to_file(sbv, outfilename);
+                    printf("Wrote to %s\n", outfilename);
+                    exit(EXIT_SUCCESS);
+                } else {
+                    pids_j[j] = pid_j;
+                }
             }
+            for(j = 0; j < num_files; j++) {
+                int status;
+                waitpid(pids_j[j], &status, 0);
+            }
+            hash_destroy(h);
+            exit(EXIT_SUCCESS);
+        } else {
+            pids_i[i] = pid_i;
         }
-        for(j = 0; j < num_files; j++) {
-            int status;
-            waitpid(pids_j[j], &status, 0);
-        }
-        hash_destroy(h);
+    }
+    for(i = 0; i < num_files; i++) {
+        int status;
+        waitpid(pids_i[i], &status, 0);
     }
     return 0;
 }
