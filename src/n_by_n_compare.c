@@ -197,6 +197,9 @@ int main(int argc, char **argv) {
     }
     pid_t *pids_i = calloc(num_files, sizeof(pid_t));
     for(i = 0; i < num_files; i++) {
+        if(DEBUG_LEVEL >= 2) printf("bvfnames[%i] = %s\n", i, bvfnames[i]);
+    }
+    for(i = 0; i < num_files; i++) {
         pid_t pid_i;
         pid_i = fork();
         if(pid_i == -1) {
