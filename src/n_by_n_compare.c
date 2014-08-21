@@ -187,8 +187,10 @@ int main(int argc, char **argv) {
         struct readset *set = settings->sets[i];
         for(j = 0; j < set->num_files; j++) {
             char *fafname = set->filenames[j];
-            char bvfname[4096];
-            sprintf(bvfname, "%s/%s.bv", settings->output_directory, fafname);
+            char _bvfname[4096];
+            sprintf(_bvfname, "%s/%s.bv", settings->output_directory, fafname);
+            char *bvfname = calloc(strlen(_bvfname), sizeof(char));
+            strcpy(bvfname, _bvfname);
             fafnames[k] = fafname;
             bvfnames[k] = bvfname;
             if(DEBUG_LEVEL >= 2) printf("bvfnames[%i] = %s\n", k, bvfnames[k]);
@@ -227,7 +229,6 @@ int main(int argc, char **argv) {
         int status;
         waitpid(pids_i[i], &status, 0);
     }
-    exit(0xEDEAD);
     pids_i = calloc(num_files, sizeof(pid_t));
     for(i = 0; i < num_files; i++) {
         pid_t pid_i;
