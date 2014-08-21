@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -9,6 +10,7 @@ struct readset {
     char *name;
     char **filenames;
     int num_files;
+    uint64_t *kmers_if_files;
 };
 
 struct readset **read_sets_file(char *filename) {
