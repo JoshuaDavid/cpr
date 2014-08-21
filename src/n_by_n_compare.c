@@ -31,6 +31,7 @@ uint64_t get_num_kmers(char *fafname, char *bvfname, int kmer_size) {
     char read[4096];
     uint64_t current_read = 0;
     uint64_t num_kmers = 0;
+    uint64_t num_lines = 0;
     while(NULL != (fgets(read, sizeof(read), fafp))) {
         if(read[0] == '>') {
             // This is the name of the read, and we don't care.
@@ -41,9 +42,10 @@ uint64_t get_num_kmers(char *fafname, char *bvfname, int kmer_size) {
                     num_kmers += len - kmer_size + 1;
                 }
             }
+            num_lines++;
         }
     };
-    if(DEBUG_LEVEL >= 1) printf("Done counting kmers in %s (%lli total).\n", fafname, num_kmers);
+    if(DEBUG_LEVEL >= 1) printf("Done counting kmers in %s (%lli total in %lli lines).\n", fafname, num_kmers, num_lines);
     return num_kmers;
 }
 
@@ -214,7 +216,6 @@ int main(int argc, char **argv) {
             }
             exit(EXIT_SUCCESS);
         } else {
-            if(DEBUG_LEVEL >= 2) printf("I am the parent.\n");
             pids_i[i] = pid_i;
             int status;
             waitpid(pids_i[i], &status, 0);
