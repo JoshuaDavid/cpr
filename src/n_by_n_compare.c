@@ -212,6 +212,7 @@ int main(int argc, char **argv) {
             }
             exit(EXIT_SUCCESS);
         } else {
+            if(DEBUG_LEVEL >= 2) printf("I am the parent.\n");
             pids_i[i] = pid_i;
         }
     }
