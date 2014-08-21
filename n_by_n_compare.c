@@ -162,6 +162,7 @@ struct bit_vector *search_file(struct commet_job *settings, struct hash *h,
 
 int main(int argc, char **argv) {
     struct commet_job *settings = get_settings(argc, argv);
+    print_commet_job(settings);
     int i = 0;
     int j = 0;
     int k = 0;

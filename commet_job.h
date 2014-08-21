@@ -142,7 +142,7 @@ void print_usage(void) {
 struct commet_job *get_settings(int argc, char **argv) {
     struct commet_job *settings = default_commet_job();
     char c;
-    while((c = getopt(argc, argv, "m:e:l:k:n:o:r:t:h")) != -1) {
+    while((c = getopt(argc, argv, "m:e:l:k:n:o:rt:h")) != -1) {
         switch(c) {
             case 'e':
                 sscanf(optarg, "%f", &(settings->min_entropy));
@@ -157,13 +157,13 @@ struct commet_job *get_settings(int argc, char **argv) {
                 sscanf(optarg, "%lli", &(settings->max_reads_in_set));
                 break;
             case 'o':
-                sscanf(optarg, "%s", &(settings->output_directory));
+                sscanf(optarg, "%s", settings->output_directory);
                 break;
             case 'n':
                 sscanf(optarg, "%i", &(settings->max_n_in_read));
                 break;
             case 'r':
-                sscanf(optarg, "%i", &(settings->ridiculous_parallelism));
+                settings->ridiculous_parallelism = 1;
                 break;
             case 't':
                 sscanf(optarg, "%i", &(settings->min_shared_kmers));
@@ -175,10 +175,13 @@ struct commet_job *get_settings(int argc, char **argv) {
             case '?':
                 printf("%s", optarg);
                 break;
+            default:
+                printf("%s", optarg);
+                break;
         }
     }
-    if(argc == 2) {
-        char *config_filename = argv[1];
+    if(argc > optind) {
+        char *config_filename = argv[optind];
         struct readset **sets = read_sets_file(config_filename);
         int num_sets = 0;
         // Count the sets
