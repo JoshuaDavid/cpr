@@ -42,10 +42,10 @@ uint64_t get_num_kmers(char *fafname, char *bvfname, int kmer_size) {
                     num_kmers += len - kmer_size + 1;
                 }
             }
-            num_lines++;
+            current_read++;
         }
     };
-    if(DEBUG_LEVEL >= 1) printf("Done counting kmers in %s (%lli total in %lli lines).\n", fafname, num_kmers, num_lines);
+    if(DEBUG_LEVEL >= 1) printf("Done counting kmers in %s (%lli total in %lli lines).\n", fafname, num_kmers, current_read);
     return num_kmers;
 }
 
