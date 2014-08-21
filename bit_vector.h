@@ -78,7 +78,7 @@ void bv_set(struct bit_vector *bv, uint64_t index, int val) {
     if(val) c |= (char) bit_mask;
     else    c &= (char) ~(1 << bit_mask);
     if(rand() % 100 == 0) {
-        printf("%i: %x->%x\n", val, bv->values[byte_index], c);
+        printf("%i: %x->%x\n", 0xFF & val, bv->values[byte_index], c);
     }
     bv->values[byte_index] = c;
 }

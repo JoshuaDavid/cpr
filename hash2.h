@@ -23,14 +23,12 @@ struct hash {
 void *shared_calloc(size_t nmemb, size_t size) {
     void *mem = mmap(NULL, nmemb * size, PROT_READ | PROT_WRITE, 
                      MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-    printf("Allocating %p.\n", mem);
     memset(mem, 0, nmemb * size);
     return mem;
 }
 
 void shared_free_size(void *mem, size_t nmemb, size_t size) {
     if(mem) {
-        printf("Freeing %p.\n", mem);
         munmap(mem, nmemb * size);
     }
 }

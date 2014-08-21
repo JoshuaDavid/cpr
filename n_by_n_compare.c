@@ -85,7 +85,6 @@ void index_read_in_hash(struct hash *h, char* read, int kmer_size) {
 
 void index_file(struct commet_job *settings, struct hash *h, 
         char *fafname, char * bvfname) {
-    printf("Indexing file %s\n", fafname);
     FILE *fp;
     fp = fopen(fafname, "r");
     char read[65536];
@@ -101,7 +100,6 @@ void index_file(struct commet_job *settings, struct hash *h,
             readnum++;
         }
     }
-    printf("Done indexing file %s\n", fafname);
     return;
 }
 
@@ -129,7 +127,6 @@ struct counter *search_seq_in_hash(struct hash *h, char* seq, int kmer_size) {
 
 struct bit_vector *search_file(struct commet_job *settings, struct hash *h,
         char *fafname, char * bvfname) {
-    printf("Searching file %s\n", fafname);
     FILE *fp;
     fp = fopen(fafname, "r");
     char read[65536];
@@ -203,7 +200,7 @@ int main(int argc, char **argv) {
                 char outfilename[4096];
                 sprintf(outfilename, "%s/%s_in_%s.bv", settings->output_directory, fafnames[j], fafnames[i]);
                 bv_save_to_file(sbv, outfilename);
-                printf("%s\n", outfilename);
+                printf("Wrote to %s\n", outfilename);
                 exit(EXIT_SUCCESS);
             } else {
                 pids_j[j] = pid_j;
