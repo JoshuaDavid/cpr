@@ -221,6 +221,13 @@ int main(int argc, char **argv) {
             exit(EXIT_SUCCESS);
         } else {
             pids_i[i] = pid_i;
+            if(!settings->ridiculous_parallelism) {
+                // This option allows small datasets to run
+                // quickly, but probably shouldn't be used
+                // for large datasets.
+                int status;
+                waitpid(pid_i, status, 0);
+            }
         }
     }
     for(i = 0; i < num_files; i++) {

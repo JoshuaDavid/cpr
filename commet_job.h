@@ -79,6 +79,7 @@ struct commet_job {
     int kmer_size;              /* -k */
     float min_entropy;          /* -e */
     int min_shared_kmers;       /* -t */
+    int ridiculous_parallelism; /* -r */
     int min_length_of_read;     /* -l */
     int max_n_in_read;          /* -n */
     uint64_t max_reads_in_set;  /* -m */
@@ -111,6 +112,8 @@ void print_commet_job(struct commet_job *settings) {
             settings->max_n_in_read);
     printf("settings->max_reads_in_set   = %llu;\n",
             settings->max_reads_in_set);
+    printf("settings->ridiculous_parallelism = %i;\n",
+            settings->ridiculous_parallelism);
     printf("settings->sets               = {\n");
     int i = 0;
     for(i = 0; i < settings->num_sets; i++) {
@@ -139,7 +142,7 @@ void print_usage(void) {
 struct commet_job *get_settings(int argc, char **argv) {
     struct commet_job *settings = default_commet_job();
     char c;
-    while((c = getopt(argc, argv, "e:l:k:m:o:n:t:h")) != -1) {
+    while((c = getopt(argc, argv, "m:e:l:k:n:o:r:t:h")) != -1) {
         switch(c) {
             case 'e':
                 sscanf(optarg, "%f", &(settings->min_entropy));
@@ -148,19 +151,22 @@ struct commet_job *get_settings(int argc, char **argv) {
                 sscanf(optarg, "%i", &(settings->min_length_of_read));
                 break;
             case 'k':
-                sscanf(optarg, "%i", &(settings->min_length_of_read));
+                sscanf(optarg, "%i", &(settings->kmer_size));
                 break;
             case 'm':
-                sscanf(optarg, "%i", &(settings->min_length_of_read));
+                sscanf(optarg, "%lli", &(settings->max_reads_in_set));
                 break;
             case 'o':
-                sscanf(optarg, "%i", &(settings->min_length_of_read));
+                sscanf(optarg, "%s", &(settings->output_directory));
                 break;
             case 'n':
-                sscanf(optarg, "%i", &(settings->min_length_of_read));
+                sscanf(optarg, "%i", &(settings->max_n_in_read));
+                break;
+            case 'r':
+                sscanf(optarg, "%i", &(settings->ridiculous_parallelism));
                 break;
             case 't':
-                sscanf(optarg, "%i", &(settings->min_length_of_read));
+                sscanf(optarg, "%i", &(settings->min_shared_kmers));
                 break;
             case 'h':
                 print_usage();
