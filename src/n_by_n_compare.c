@@ -43,7 +43,7 @@ uint64_t get_num_kmers(char *fafname, char *bvfname, int kmer_size) {
             }
         }
     };
-    if(DEBUG_LEVEL >= 1) printf("Done counting kmers in %s.\n", fafname);
+    if(DEBUG_LEVEL >= 1) printf("Done counting kmers in %s (%lli total).\n", fafname, num_kmers);
     return num_kmers;
 }
 
