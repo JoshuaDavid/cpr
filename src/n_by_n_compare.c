@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
             sprintf(bvfname, "%s/%s.bv", settings->output_directory, fafname);
             fafnames[k] = fafname;
             bvfnames[k] = bvfname;
-            if(DEBUG_LEVEL >= 2) printf("bvfnames[%i] = %s", k, bvfnames[k]);
+            if(DEBUG_LEVEL >= 2) printf("bvfnames[%i] = %s\n", k, bvfnames[k]);
             k++;
         }
     }
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
             perror("Fork failed.");
             exit(1);
         } else if(pid_i == 0) {
-            if(DEBUG_LEVEL >= 2) printf("bvfnames[%i] = %s", i, bvfnames[i]);
+            if(DEBUG_LEVEL >= 2) printf("bvfnames[%i] = %s\n", i, bvfnames[i]);
             if(file_exists(bvfnames[i])) {
                 printf("Using existing file %s.\n", bvfnames[i]);
             } else {
