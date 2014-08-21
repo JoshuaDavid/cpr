@@ -46,6 +46,21 @@ struct bit_vector *read_bit_vector(char *bvfname) {
     return bv;
 }
 
+struct bit_vector *create_bit_vector(uint64_t num_bits) {
+    struct bit_vector *bv = calloc(1, sizeof(struct bit_vector));
+    bv->num_bits = num_bits;
+    bv->_size = 1 + (num_bits / CHAR_BIT);
+    bv->values = calloc(bv->_size, sizeof(char));
+    bv->offset = 0;
+    return bv;
+}
+
+void bv_save_to_file(struct bit_vector *bv, char *fname) {
+    FILE *fp;
+    fp = fopen(fname, "wb");
+    fwrite(bv->values, 1, bv->_size, fp);
+}
+
 int bv_get(struct bit_vector *bv, uint64_t index) {
     index += (CHAR_BIT * bv->offset);
     uint64_t byte_index = (index / CHAR_BIT);
@@ -53,4 +68,17 @@ int bv_get(struct bit_vector *bv, uint64_t index) {
     char bit_mask = (char)(1 << (index % CHAR_BIT));
     c &= bit_mask;
     return c && 1;
+}
+
+void bv_set(struct bit_vector *bv, uint64_t index, int val) {
+    index += (CHAR_BIT * bv->offset);
+    uint64_t byte_index = (index / CHAR_BIT);
+    char c = bv->values[byte_index];
+    char bit_mask = (char)(1 << (index % CHAR_BIT));
+    if(val) c |= (char) bit_mask;
+    else    c &= (char) ~(1 << bit_mask);
+    if(rand() % 100 == 0) {
+        printf("%i: %x->%x\n", val, bv->values[byte_index], c);
+    }
+    bv->values[byte_index] = c;
 }

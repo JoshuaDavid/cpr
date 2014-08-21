@@ -127,13 +127,22 @@ struct counter *search_seq_in_hash(struct hash *h, char* seq, int kmer_size) {
     return same;
 }
 
-struct counter *search_file(struct commet_job *settings, struct hash *h,
+struct bit_vector *search_file(struct commet_job *settings, struct hash *h,
         char *fafname, char * bvfname) {
     printf("Searching file %s\n", fafname);
     FILE *fp;
     fp = fopen(fafname, "r");
-    struct counter *same = calloc(1, sizeof(struct counter));
     char read[65536];
+    uint64_t num_lines = 0;
+    while(NULL != fgets(read, sizeof(read), fp)) {
+        if(read[0] == '>') {
+            // Name of read, ignore
+        } else {
+            num_lines++;
+        }
+    }
+    fseek(fp, 0, SEEK_SET);
+    struct bit_vector *sbv = create_bit_vector(num_lines);
     int readnum = 0;
     struct bit_vector *bv = read_bit_vector(bvfname);
     while(NULL != fgets(read, sizeof(read), fp)) {
@@ -143,15 +152,15 @@ struct counter *search_file(struct commet_job *settings, struct hash *h,
             if(bv_get(bv, readnum)) {
                 struct counter *c = search_seq_in_hash(h, read, settings->kmer_size);
                 if(c->t >= settings->min_shared_kmers) {
-                    same->t++;
+                    bv_set(sbv, readnum, 1);
                 } else {
-                    same->f++;
+                    bv_set(sbv, readnum, 0);
                 }
             }
             readnum++;
         }
     }
-    return same;
+    return sbv;
 }
 
 int main(int argc, char **argv) {
@@ -183,24 +192,26 @@ int main(int argc, char **argv) {
         index_file(settings, h, fafnames[i], bvfnames[i]);
         pid_t *pids_j = calloc(num_files, sizeof(pid_t));
         for(j = 0; j < num_files; j++) {
-            pid_t pid;
-            pid = fork();
-            if(pid == -1) {
+            pid_t pid_j;
+            pid_j = fork();
+            if(pid_j == -1) {
                 perror("Fork failed.");
                 exit(1);
-            } else if(pid == 0) {
+            } else if(pid_j == 0) {
                 // Is child process
-                struct counter *c = search_file(settings, h, fafnames[j], bvfnames[j]);
-                printf("%s in %s, %lld / %lld\n", 
-                        fafnames[j], fafnames[i], c->t, c->t + c->f);
+                struct bit_vector *sbv = search_file(settings, h, fafnames[j], bvfnames[j]);
+                char outfilename[4096];
+                sprintf(outfilename, "%s/%s_in_%s.bv", settings->output_directory, fafnames[j], fafnames[i]);
+                bv_save_to_file(sbv, outfilename);
+                printf("%s\n", outfilename);
                 exit(EXIT_SUCCESS);
             } else {
-                pids_j[j] = pid;
+                pids_j[j] = pid_j;
             }
         }
         for(j = 0; j < num_files; j++) {
             int status;
-            waitpid(pids_j[j], status, 0);
+            waitpid(pids_j[j], &status, 0);
         }
         hash_destroy(h);
     }
