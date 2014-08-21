@@ -222,6 +222,7 @@ int main(int argc, char **argv) {
         int status;
         waitpid(pids_i[i], &status, 0);
     }
+    exit(0xEDEAD);
     pids_i = calloc(num_files, sizeof(pid_t));
     for(i = 0; i < num_files; i++) {
         pid_t pid_i;
