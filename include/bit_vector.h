@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
+#define BITVEC struct bit_vector
+
 uint8_t bits_in_byte[256] = { 0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,1,2,2,3,2,3,3,4,
     2,3,3,4,3,4,4,5,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,
     5,5,6,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,2,3,
@@ -25,6 +27,19 @@ struct bit_vector {
     uint64_t num_bits;
     uint64_t offset; // Offset in BYTES
 };
+
+// Consistent naming scheme
+struct bit_vector *bv_create(uint64_t num_bits) {
+    struct bit_vector *bv = calloc(1, sizeof(struct bit_vector));
+    char *values = mmap(NULL, num_bits / CHAR_BIT, PROT_READ,
+            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    memset(values, 0, num_bits / CHAR_BIT);
+    bv->num_bits = num_bits;
+    bv->_size = 1 + (num_bits / CHAR_BIT);
+    bv->values = calloc(bv->_size, sizeof(char));
+    bv->offset = 0;
+    return bv;
+}
 
 struct bit_vector *bv_read_from_file(char *bvfname) {
     FILE *bvfp; // Bit vector file pointer
@@ -56,41 +71,17 @@ struct bit_vector *bv_read_from_file(char *bvfname) {
     return bv;
 }
 
+void bv_save_to_file(struct bit_vector *bv, char *fname) {
+    FILE *fp;
+    fp = fopen(fname, "wb");
+    fwrite(bv->values, 1, bv->_size, fp);
+}
+
 void bv_destroy(struct bit_vector *bv) {
     if(bv->values) {
         munmap(bv->values, bv->num_bits / CHAR_BIT);
     }
     free(bv);
-}
-
-uint64_t bv_count_bits(struct bit_vector *bv) {
-    printf("bv\n");
-    uint64_t i;
-    uint64_t count = 0;
-    for(i = bv->offset; i < bv->_size - 1; i++) {
-        int j;
-        count += bits_in_byte[bv->values[i]];
-    }
-    return count;
-}
-
-// Consistent naming scheme
-struct bit_vector *bv_create(uint64_t num_bits) {
-    struct bit_vector *bv = calloc(1, sizeof(struct bit_vector));
-    char *values = mmap(NULL, num_bits / CHAR_BIT, PROT_READ,
-            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    memset(values, 0, num_bits / CHAR_BIT);
-    bv->num_bits = num_bits;
-    bv->_size = 1 + (num_bits / CHAR_BIT);
-    bv->values = calloc(bv->_size, sizeof(char));
-    bv->offset = 0;
-    return bv;
-}
-
-void bv_save_to_file(struct bit_vector *bv, char *fname) {
-    FILE *fp;
-    fp = fopen(fname, "wb");
-    fwrite(bv->values, 1, bv->_size, fp);
 }
 
 int bv_get(struct bit_vector *bv, uint64_t index) {
@@ -115,3 +106,61 @@ void bv_set(struct bit_vector *bv, uint64_t index, int val) {
     else    c &= (char) ~(1 << bit_mask);
     bv->values[byte_index] = c;
 }
+
+uint64_t bv_count_bits(struct bit_vector *bv) {
+    uint64_t i;
+    uint64_t count = 0;
+    for(i = 0; i < bv->num_bits; i++) {
+        // There is a better way of doing this, but unless it's a performance
+        // issue, this is the clearest way
+        count += bv_get(bv, i);
+    }
+    return count;
+}
+
+struct bit_vector *bv_copy(struct bit_vector *bv) {
+    struct bit_vector *ret = bv_create(bv->num_bits);
+    uint64_t i;
+    for(i = 0; i < bv->num_bits; i++) {
+        bv_set(ret, i, bv_get(bv, i));
+    }
+    return ret;
+}
+
+struct bit_vector *bv_and(struct bit_vector *bva, struct bit_vector *bvb) {
+    // Minimum of the lengths, as the rest is zeroed anyway
+    uint64_t num_bits = bva->num_bits < bvb->num_bits ? 
+                        bva->num_bits : bvb->num_bits;
+    struct bit_vector *ret = bv_create(num_bits);
+    uint64_t i = 0;
+    for(i = 0;  i < num_bits; i++) {
+        bv_set(ret, i, bv_get(bva, i) & bv_get(bvb, i));
+    }
+    return ret;
+}
+
+struct bit_vector *bv_or(struct bit_vector *bva, struct bit_vector *bvb) {
+    // Minimum of the lengths, as the rest is zeroed anyway
+    uint64_t num_bits = bva->num_bits < bvb->num_bits ? 
+                        bva->num_bits : bvb->num_bits;
+    struct bit_vector *ret = bv_create(num_bits);
+    uint64_t i = 0;
+    for(i = 0;  i < num_bits; i++) {
+        bv_set(ret, i, bv_get(bva, i) | bv_get(bvb, i));
+    }
+    return ret;
+}
+
+struct bit_vector *bv_xor(struct bit_vector *bva, struct bit_vector *bvb) {
+    // Minimum of the lengths, as the rest is zeroed anyway
+    uint64_t num_bits = bva->num_bits < bvb->num_bits ? 
+                        bva->num_bits : bvb->num_bits;
+    struct bit_vector *ret = bv_create(num_bits);
+    uint64_t i = 0;
+    for(i = 0;  i < num_bits; i++) {
+        bv_set(ret, i, bv_get(bva, i) ^ bv_get(bvb, i));
+    }
+    return ret;
+}
+
+

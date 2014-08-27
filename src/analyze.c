@@ -20,7 +20,8 @@ void compare_files_within_set(struct commet_job *settings, struct readset *set) 
     // Easily parallelizeable
     struct bit_vector **comparisons[set->num_files];
     for(i = 0; i < set->num_files; i++) {
-        struct bit_vector *comparisons[i][set->num_files];
+        struct bit_vector **row = calloc(set->num_files, sizeof(struct bit_vector **));
+        comparisons[i] = row;
         for(j = 0; j < set->num_files; j++) {
             char *ifafname = set->filenames[i];
             char *sfafname = set->filenames[j];
@@ -31,20 +32,19 @@ void compare_files_within_set(struct commet_job *settings, struct readset *set) 
 
     // Calculate similarity between each pair of files
     // Easily parallelizeable
-    float **similarity[set->num_files];
+    float *similarity[set->num_files];
     for(i = 0; i < set->num_files; i++) {
-        float similarity[i][set->num_files];
+        float *row = NULL;
+        similarity[i] = calloc(set->num_files, sizeof(float));
         char *ifafname = set->filenames[i];
-        uint64_t num_reads_indexed = 1;//bv_count_bits(bvs[i]);
+        uint64_t num_reads_indexed = bv_count_bits(bvs[i]);
+        printf("%s: %lli\n", ifafname, num_reads_indexed);
         for(j = 0; j < set->num_files; j++) {
             char *sfafname = set->filenames[j];
             char *bvfname = get_bvfname_of_index_and_search(settings, ifafname, sfafname);
             // Segfaults here for some reason
-            printf("%p\n", comparisons);
-            printf("%p\n", comparisons[i]);
-            printf("%p\n", comparisons[i][j]);
             uint64_t num_index_in_search = bv_count_bits(comparisons[i][j]);
-            similarity[i][j] = (float) num_index_in_search / (float) num_reads_indexed;
+            similarity[i][j] = (float) num_index_in_search ;// (float) num_reads_indexed;
         }
     }
 
@@ -52,16 +52,18 @@ void compare_files_within_set(struct commet_job *settings, struct readset *set) 
     // Not parallelizeable (and why would you bother?)
     for(i = 0; i < set->num_files; i++) {
         char *ifafname = set->filenames[i];
-        printf(";%s\t", ifafname);
+        printf(";%s", ifafname);
     }
     printf("\n");
     for(i = 0; i < set->num_files; i++) {
         char *ifafname = set->filenames[i];
-        printf("%s\t", ifafname);
+        printf("%s", ifafname);
         uint64_t num_reads_indexed = bv_count_bits(bvs[i]);
         for(j = 0; j < set->num_files; j++) {
             char *sfafname = set->filenames[j];
+            printf(";%7.0f", similarity[i][j]);
         }
+        printf("\n");
     }
 }
 
