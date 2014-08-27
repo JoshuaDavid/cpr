@@ -4,23 +4,67 @@
 #include "commet_job.h"
 #include "shame.h"
 
-
-void compare_files_within_set(struct commet_job *settings, struct readset *set) {
-    int i = 0, j = 0;
-    // Bit vectors for each file;
-    // Easily parallelizeable
-    struct bit_vector *bvs[set->num_files];
+BITVEC **get_filter_bvs(CJOB *settings, READSET *set) {
+    BITVEC **bvs = calloc(set->num_files, sizeof(BITVEC *));
+    uint64_t i = 0;
     for(i = 0; i < set->num_files; i++) {
         char *fafname = set->filenames[i];
         char *bvfname = get_bvfname_from_one_fafname(settings, fafname);
         bvs[i] = bv_read_from_file(bvfname);
     }
+    return bvs;
+}
+
+BITVEC ***get_comparison_bvs(CJOB *settings, READSET *set_a, READSET *set_b) {
+    BITVEC ***comparisons = calloc(set_a->num_files, sizeof(BITVEC **));
+    uint64_t i = 0, j = 0;
+    for(i = 0; i < set_a->num_files; i++) {
+        comparisons[i] = calloc(set_b->num_files, sizeof(BITVEC *));
+        for(j = 0; j < set_b->num_files; j++) {
+            char *ifafname = set_a->filenames[i];
+            char *sfafname = set_a->filenames[j];
+            char *bvfname = get_bvfname_of_index_and_search(settings, ifafname, sfafname);
+            comparisons[i][j] = bv_read_from_file(bvfname);
+        }
+    }
+    return comparisons;
+}
+
+void print_comparison(CJOB *settings, READSET *set_a, READSET *set_b) {
+    BITVEC ***comparisons = get_comparison_bvs(settings, set_a, set_b);
+    BITVEC **bvs_a = get_filter_bvs(settings, set_a);
+    BITVEC **bvs_b = get_filter_bvs(settings, set_b);
+    uint64_t i = 0, j = 0;
+    for(i = 0; i < set_a->num_files; i++) {
+        char *sfafname = set_a->filenames[i];
+        printf("Counting reads in \"%s\" that occur in any of [\n", sfafname);
+        BITVEC *acc = (bv_read_from_file(sfafname));
+        BITVEC *next;
+        for(j = 0; j < set_b->num_files; j++) {
+            char *ifafname = set_a->filenames[j];
+            char *bvfname = get_bvfname_of_index_and_search(settings, ifafname, sfafname);
+            BITVEC *intersection = bv_read_from_file(bvfname);
+            next = bv_or(acc, intersection);
+            bv_destroy(acc); // Fix memory leak
+            acc = next;
+            printf("\n\t\"%s\", ", sfafname);
+            //printf("%s(%lli) IN %s(%lli): %lli\n", ifafname);
+        }
+        printf("\n]\n");
+    }
+}
+
+void compare_files_within_set(CJOB *settings, READSET *set) {
+    int i = 0, j = 0;
+    // Bit vectors for each file;
+    // Easily parallelizeable
+    BITVEC **bvs = get_filter_bvs(settings, set);
 
     // Get comparison bit vectors
     // Easily parallelizeable
-    struct bit_vector **comparisons[set->num_files];
+    BITVEC **comparisons[set->num_files];
     for(i = 0; i < set->num_files; i++) {
-        struct bit_vector **row = calloc(set->num_files, sizeof(struct bit_vector **));
+        BITVEC **row = calloc(set->num_files, sizeof(BITVEC **));
         comparisons[i] = row;
         for(j = 0; j < set->num_files; j++) {
             char *ifafname = set->filenames[i];
@@ -67,20 +111,27 @@ void compare_files_within_set(struct commet_job *settings, struct readset *set) 
     }
 }
 
-void compare_all_sets(struct commet_job *settings) {
+void compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
+    BITVEC **bvs_a = get_filter_bvs(settings, set_a);
+    BITVEC **bvs_b = get_filter_bvs(settings, set_b);
+    VERIFY_NONEMPTY(bvs_a);
+
+    BITVEC *acc = bv_copy(bvs_a[0]);
+    uint64_t i = 0;
+}
+
+void compare_all_sets(CJOB *settings) {
     int i = 0, j = 0;
-    struct readset **sets = settings->sets;
+    READSET **sets = settings->sets;
+    print_comparison(settings, sets[0], sets[1]);
     for(i = 0; i < settings->num_sets; i++) {
-        printf("COMPARING SETS: %s vs %s\n", sets[i]->name, sets[i]->name);
-        compare_files_within_set(settings, sets[i]);
         for(j = 0; j < settings->num_sets; j++) {
-            printf("COMPARING SETS: %s vs %s\n", sets[i]->name, sets[j]->name);
         }
     }
 }
 
 int main(int argc, char **argv) {
-    struct commet_job *settings = get_settings(argc, argv);
+    CJOB *settings = get_settings(argc, argv);
     compare_all_sets(settings);
     return EXIT_SUCCESS;
 }

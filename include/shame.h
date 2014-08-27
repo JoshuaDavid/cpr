@@ -1,5 +1,10 @@
 // This is the header file for the things I'm not yet sure where to put.
 
+#define VERIFY_NONEMPTY(arr) if(arr[0] == NULL) {\
+    fprintf(stderr, "Array is empty\n");\
+    exit(EXIT_FAILURE);\
+}
+
 char *get_bvfname_from_one_fafname(struct commet_job *settings, char *fafname) {
     char _bvfname[4096];
     sprintf(_bvfname, "%s/%s.bv", settings->output_directory, fafname);

@@ -7,6 +7,9 @@
 #include <errno.h>
 #include "debug.h"
 
+#define READSET struct readset
+#define CJOB struct commet_job
+
 struct readset {
     char *name;
     char **filenames;
@@ -14,8 +17,8 @@ struct readset {
     uint64_t *kmers_if_files;
 };
 
-struct readset **read_sets_file(char *filename) {
-    struct readset **sets = calloc(256, sizeof(struct readset));
+READSET **read_sets_file(char *filename) {
+    READSET **sets = calloc(256, sizeof(READSET));
     FILE *fp;
     char line[4096];
     fp = fopen(filename, "r");
@@ -34,7 +37,7 @@ struct readset **read_sets_file(char *filename) {
         char *name = calloc(j, sizeof(char));
         strncpy(name, line, j + 1);
         name[j] = '\0';
-        struct readset *set = calloc(1, sizeof(struct readset));
+        READSET *set = calloc(1, sizeof(READSET));
         set->name = name;
         char **filenames = calloc(256, sizeof(char*));
         while(line[j] == ' ' || line[j] == ':') j++;
@@ -74,7 +77,7 @@ struct readset **read_sets_file(char *filename) {
 }
 
 struct commet_job {
-    struct readset **sets;
+    READSET **sets;
     int num_sets;
     char *output_directory;     /* -o */
     int kmer_size;              /* -k */
@@ -86,8 +89,8 @@ struct commet_job {
     uint64_t max_reads_in_set;  /* -m */
 };
 
-struct commet_job *default_commet_job(void) {
-    struct commet_job *settings = calloc(1, sizeof(struct commet_job));
+CJOB *default_commet_job(void) {
+    CJOB *settings = calloc(1, sizeof(CJOB));
     settings->output_directory = "./output_commet";
     settings->kmer_size = 33;
     settings->min_entropy = 0.0;
@@ -98,7 +101,7 @@ struct commet_job *default_commet_job(void) {
     return settings;
 }
 
-void print_commet_job(struct commet_job *settings) {
+void print_commet_job(CJOB *settings) {
     printf("settings->output_directory   = \"%s\";\n",
             settings->output_directory);
     printf("settings->kmer_size          = %i;\n",
@@ -118,7 +121,7 @@ void print_commet_job(struct commet_job *settings) {
     printf("settings->sets               = {\n");
     int i = 0;
     for(i = 0; i < settings->num_sets; i++) {
-        struct readset *set = settings->sets[i];
+        READSET *set = settings->sets[i];
         printf("\t\"%s\": [\n", set->name);
         int j = 0;
         for(j = 0; j < set->num_files; j++) {
@@ -140,8 +143,8 @@ void print_usage(void) {
     printf("[-m max_reads_in_set]\n");
 }
 
-struct commet_job *get_settings(int argc, char **argv) {
-    struct commet_job *settings = default_commet_job();
+CJOB *get_settings(int argc, char **argv) {
+    CJOB *settings = default_commet_job();
     char c;
     while((c = getopt(argc, argv, "m:e:l:k:n:o:rt:h")) != -1) {
         switch(c) {
@@ -183,7 +186,7 @@ struct commet_job *get_settings(int argc, char **argv) {
     }
     if(argc >= optind) {
         char *config_filename = argv[optind];
-        struct readset **sets = read_sets_file(config_filename);
+        READSET **sets = read_sets_file(config_filename);
         int num_sets = 0;
         // Count the sets
         while(sets[num_sets++]);
