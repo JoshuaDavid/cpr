@@ -9,6 +9,7 @@
 #include "hash2.h"
 #include "counter.h"
 #include "filter_reads.h"
+#include "shame.h"
 
 
 uint64_t kmer_mask(int kmer_size) {
@@ -26,7 +27,7 @@ uint64_t get_num_kmers(char *fafname, char *bvfname, int kmer_size) {
     FILE *fafp; // Fasta file pointer
     fafp = fopen(fafname, "r");
     struct bit_vector *bv;
-    bv = read_bit_vector(bvfname);
+    bv = bv_read_from_file(bvfname);
     
     char read[4096];
     uint64_t current_read = 0;
@@ -99,7 +100,7 @@ void index_file(struct commet_job *settings, struct hash *h,
     fp = fopen(fafname, "r");
     char read[65536];
     int readnum = 0;
-    struct bit_vector *bv = read_bit_vector(bvfname);
+    struct bit_vector *bv = bv_read_from_file(bvfname);
     while(NULL != fgets(read, sizeof(read), fp)) {
         if(read[0] == '>') {
             // Name of file, ignore
@@ -151,9 +152,9 @@ struct bit_vector *search_file(struct commet_job *settings, struct hash *h,
         }
     }
     fseek(fp, 0, SEEK_SET);
-    struct bit_vector *sbv = create_bit_vector(num_lines);
+    struct bit_vector *sbv = bv_create(num_lines);
     int readnum = 0;
-    struct bit_vector *bv = read_bit_vector(bvfname);
+    struct bit_vector *bv = bv_read_from_file(bvfname);
     while(NULL != fgets(read, sizeof(read), fp)) {
         if(read[0] == '>') {
             // Name of read, ignore
@@ -165,6 +166,8 @@ struct bit_vector *search_file(struct commet_job *settings, struct hash *h,
                 } else {
                     bv_set(sbv, readnum, 0);
                 }
+            } else {
+                bv_set(sbv, readnum, 0);
             }
             readnum++;
         }
@@ -189,10 +192,7 @@ int main(int argc, char **argv) {
         struct readset *set = settings->sets[i];
         for(j = 0; j < set->num_files; j++) {
             char *fafname = set->filenames[j];
-            char _bvfname[4096];
-            sprintf(_bvfname, "%s/%s.bv", settings->output_directory, fafname);
-            char *bvfname = calloc(strlen(_bvfname), sizeof(char));
-            strcpy(bvfname, _bvfname);
+            char *bvfname = get_bvfname_from_one_fafname(settings, fafname);
             fafnames[k] = fafname;
             bvfnames[k] = bvfname;
             k++;

@@ -54,7 +54,7 @@ struct bit_vector *filter_reads(struct commet_job *settings, char *fafname) {
         }
     }
     fseek(fp, 0, SEEK_SET);
-    struct bit_vector *bv = create_bit_vector(num_lines);
+    struct bit_vector *bv = bv_create(num_lines);
     uint64_t readnum = 0;
     while(NULL != fgets(read, sizeof(read), fp)) {
         if(read[0] == '>') {
