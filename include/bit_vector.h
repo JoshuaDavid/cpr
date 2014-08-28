@@ -1,3 +1,6 @@
+#ifndef BIT_VECTOR_H
+#define BIT_VECTOR_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -167,4 +170,4 @@ BITVEC *bv_xor(BITVEC *bva, BITVEC *bvb) {
     return ret;
 }
 
-
+#endif

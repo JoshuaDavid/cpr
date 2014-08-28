@@ -1,3 +1,6 @@
+#ifndef COMMET_JOB_H
+#define COMMET_JOB_H
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -197,3 +200,5 @@ CJOB *get_settings(int argc, char **argv) {
 
     return settings;
 }
+
+#endif

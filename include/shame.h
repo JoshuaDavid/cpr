@@ -1,24 +1,27 @@
+#ifndef SHAME_H
+#define SHAME_H
 // This is the header file for the things I'm not yet sure where to put.
+// Also, all of the includes.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <assert.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <math.h>
+#include <stdint.h>
 
 #define VERIFY_NONEMPTY(arr) if(arr[0] == NULL) {\
     fprintf(stderr, "Array is empty\n");\
     exit(EXIT_FAILURE);\
 }
 
-char *get_bvfname_from_one_fafname(struct commet_job *settings, char *fafname) {
-    char _bvfname[4096];
-    sprintf(_bvfname, "%s/%s.bv", settings->output_directory, fafname);
-    char *bvfname = calloc(strlen(_bvfname) + 1, sizeof(char));
-    strcpy(bvfname, _bvfname);
-    return bvfname;
+int file_exists(char *fname) {
+    struct stat st;
+    return 0 == stat(fname, &st);
 }
-
-char *get_bvfname_of_index_and_search(struct commet_job *settings, 
-       char *ifafname, char *sfafname) {
-    char _bvfname[4096];
-    sprintf(_bvfname, "%s/%s_in_%s.bv", settings->output_directory, 
-            sfafname, ifafname);
-    char *bvfname = calloc(strlen(_bvfname) + 1, sizeof(char));
-    strcpy(bvfname, _bvfname);
-    return bvfname;
-}
+#endif
