@@ -203,6 +203,7 @@ void create_search_files_of_one_index_parallel(CJOB *settings, char *ifafname) {
             bv_save_to_file(bv, bvfname);
 
             // Begin forking code block
+            exit(EXIT_SUCCESS);
             } else {
                 pids[pid_counter] = pid;
                 pid_counter++;
@@ -271,6 +272,7 @@ void create_all_search_files_parallel(CJOB *settings, int parallel) {
             create_search_files_of_one_index(settings, ifafname, parallel);
 
             // Begin forking code block
+            exit(EXIT_SUCCESS);
             } else {
                 pids[pid_counter] = pid;
                 pid_counter++;
