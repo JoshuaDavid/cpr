@@ -135,6 +135,9 @@ void compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
         BITVEC *sbv  = bv_read_from_file(sbvfname);
         uint64_t sbvcount  = bv_count_bits(sbv);
 
+        BITVEC *acc = bv_create(sbv->num_bits);
+        BITVEC *next = NULL;
+
         for(j = 0; j < set_b->num_files; j++) {
 
             char *ifafname  = set_b->filenames[j];
@@ -146,8 +149,18 @@ void compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
             BITVEC *isbv = bv_read_from_file(isbvfname);
             uint64_t isbvcount = bv_count_bits(isbv);
 
-            printf("%s(%lli) in %s(%lli): %s(%lli)\n", sbvfname, sbvcount, ibvfname, ibvcount, isbvfname, isbvcount);
+            uint64_t acc_count = bv_count_bits(acc);
+            next = bv_or(acc, isbv);
+            acc = next;
+            uint64_t next_count = bv_count_bits(acc);
+
+            printf("%s(%lli) in %s so far: %lli\n", sfafname, sbvcount, set_b->name, acc_count);
+            printf("%s(%lli) in %s(%lli): %lli\n", sfafname, sbvcount, ifafname, ibvcount, isbvcount);
+            printf("%s(%lli) in %s so far: %lli\n", sfafname, sbvcount, set_b->name, next_count);
         }
+
+        bv_destroy(acc);
+        bv_destroy(sbv);
     }
 }
 

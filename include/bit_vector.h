@@ -54,7 +54,9 @@ BITVEC *bv_read_from_file(char *bvfname) {
     int bvfd = fileno(bvfp);
     struct stat st_bv;
     assert(0 == fstat(bvfd, &st_bv));
-    off_t size_bv = st_bv.st_size;
+    off_t pagesize = getpagesize();
+    off_t size_bv = st_bv.st_size + pagesize - st_bv.st_size % pagesize;
+    printf("%x\n", size_bv);
     char *values = mmap(NULL, size_bv, PROT_READ, MAP_PRIVATE, bvfd, 0);
     BITVEC *bv = calloc(1, sizeof(BITVEC));
     bv->values = values;
