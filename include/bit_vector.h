@@ -50,14 +50,30 @@ BITVEC *bv_create(uint64_t num_bits) {
 
 BITVEC *bv_read_from_file(char *bvfname) {
     FILE *bvfp; // Bit vector file pointer
-    bvfp = fopen(bvfname, "r");
+    bvfp = fopen(bvfname, "rw");
+    if(NULL == bvfp) {
+        perror("fopen:");
+        exit(EXIT_FAILURE);
+    }
     int bvfd = fileno(bvfp);
     struct stat st_bv;
     assert(0 == fstat(bvfd, &st_bv));
+    // Align with page boundary
+    uint64_t size_bv = st_bv.st_size;
+    uint64_t fsize = size_bv;
     off_t pagesize = getpagesize();
-    off_t size_bv = st_bv.st_size + pagesize - st_bv.st_size % pagesize;
-    printf("%x\n", size_bv);
+    if(fsize % pagesize != 0) {
+        fsize += pagesize - fsize % pagesize;
+        if(fsize != size_bv) {
+            printf("Expanding %i from %llx bytes to %llx bytes.\n", bvfd, size_bv, fsize);
+            if(0 != ftruncate(bvfd, fsize)) {
+                perror("Could not resize file. ftruncate");
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
     char *values = mmap(NULL, size_bv, PROT_READ, MAP_PRIVATE, bvfd, 0);
+    fclose(bvfp);
     BITVEC *bv = calloc(1, sizeof(BITVEC));
     bv->values = values;
     bv->_size = size_bv + 1;
@@ -81,9 +97,19 @@ BITVEC *bv_read_from_file(char *bvfname) {
 }
 
 void bv_save_to_file(BITVEC *bv, char *fname) {
-    FILE *fp;
-    fp = fopen(fname, "wb");
-    fwrite(bv->values, 1, bv->_size, fp);
+    if(bv == NULL) {
+        perror("Bit vector is null: bv_save_to_file");
+        exit(EXIT_FAILURE);
+    }
+    FILE *fp = fopen(fname, "wb");
+    uint64_t fsize = bv->_size;
+    // Align with page boundary
+    off_t pagesize = getpagesize();
+    if(fsize % pagesize != 0) {
+        fsize += pagesize - fsize % pagesize;
+    }
+    fwrite(bv->values, 1, fsize, fp);
+    fclose(fp);
 }
 
 void bv_destroy(BITVEC *bv) {

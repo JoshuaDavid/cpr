@@ -201,4 +201,9 @@ CJOB *get_settings(int argc, char **argv) {
     return settings;
 }
 
+void cjob_destroy(CJOB *settings) {
+    free(settings);
+    settings = NULL;
+}
+
 #endif

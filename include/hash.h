@@ -37,6 +37,10 @@ void shared_free_size(void *mem, size_t nmemb, size_t size) {
 
 HASH *hash_create(uint64_t size) {
     HASH *h = shared_calloc(1, sizeof(HASH));
+    // Handle attempts to allocate extremely small hashes
+    if(size < 1024) {
+        size = 1024;
+    }
     h->capacity = size * 3;
     h->count = 0;
     h->values = shared_calloc(h->capacity, sizeof(uint64_t));
@@ -66,6 +70,14 @@ void hash_insert(HASH *h, uint64_t value) {
 }
 
 int  hash_lookup(HASH *h, uint64_t value) {
+    if(h == NULL) {
+        perror("hash_lookup was passed an empty hash");
+        exit(EXIT_FAILURE);
+    }
+    if(h->capacity == 0) {
+        perror("hash_lookup was passed a hash with capacity 0");
+        exit(EXIT_FAILURE);
+    }
     uint64_t key = (value % prime_1e13) % h->capacity;
     while(h->values[key]) {
         if(h->values[key] == value) {
