@@ -86,7 +86,7 @@ struct commet_job {
     int kmer_size;              /* -k */
     float min_entropy;          /* -e */
     int min_shared_kmers;       /* -t */
-    int ridiculous_parallelism; /* -r */
+    int parallelism; /* -r */
     int min_length_of_read;     /* -l */
     int max_n_in_read;          /* -n */
     uint64_t max_reads_in_set;  /* -m */
@@ -119,8 +119,8 @@ void print_commet_job(CJOB *settings) {
             settings->max_n_in_read);
     printf("settings->max_reads_in_set   = %llu;\n",
             settings->max_reads_in_set);
-    printf("settings->ridiculous_parallelism = %i;\n",
-            settings->ridiculous_parallelism);
+    printf("settings->parallelism = %i;\n",
+            settings->parallelism);
     printf("settings->sets               = {\n");
     int i = 0;
     for(i = 0; i < settings->num_sets; i++) {
@@ -149,7 +149,7 @@ void print_usage(void) {
 CJOB *get_settings(int argc, char **argv) {
     CJOB *settings = default_commet_job();
     char c;
-    while((c = getopt(argc, argv, "m:e:l:k:n:o:rt:h")) != -1) {
+    while((c = getopt(argc, argv, "m:e:l:k:n:o:p:t:h")) != -1) {
         switch(c) {
             case 'e':
                 sscanf(optarg, "%f", &(settings->min_entropy));
@@ -169,8 +169,8 @@ CJOB *get_settings(int argc, char **argv) {
             case 'n':
                 sscanf(optarg, "%i", &(settings->max_n_in_read));
                 break;
-            case 'r':
-                settings->ridiculous_parallelism = 1;
+            case 'p':
+                sscanf(optarg, "%i", &(settings->parallelism));
                 break;
             case 't':
                 sscanf(optarg, "%i", &(settings->min_shared_kmers));
