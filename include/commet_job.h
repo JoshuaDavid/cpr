@@ -17,7 +17,7 @@ struct readset {
     char *name;
     char **filenames;
     int num_files;
-    uint64_t *kmers_if_files;
+    uintmax_t *kmers_if_files;
 };
 
 READSET **read_sets_file(char *filename) {
@@ -89,7 +89,7 @@ struct commet_job {
     int parallelism; /* -r */
     int min_length_of_read;     /* -l */
     int max_n_in_read;          /* -n */
-    uint64_t max_reads_in_set;  /* -m */
+    uintmax_t max_reads_in_set;  /* -m */
 };
 
 CJOB *default_commet_job(void) {
@@ -117,7 +117,7 @@ void print_commet_job(CJOB *settings) {
             settings->min_length_of_read);
     printf("settings->max_n_in_read      = %i;\n",
             settings->max_n_in_read);
-    printf("settings->max_reads_in_set   = %llu;\n",
+    printf("settings->max_reads_in_set   = %ju;\n",
             settings->max_reads_in_set);
     printf("settings->parallelism = %i;\n",
             settings->parallelism);
@@ -161,7 +161,7 @@ CJOB *get_settings(int argc, char **argv) {
                 sscanf(optarg, "%i", &(settings->kmer_size));
                 break;
             case 'm':
-                sscanf(optarg, "%lli", &(settings->max_reads_in_set));
+                sscanf(optarg, "%ji", &(settings->max_reads_in_set));
                 break;
             case 'o':
                 sscanf(optarg, "%s", settings->output_directory);

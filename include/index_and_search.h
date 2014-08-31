@@ -6,12 +6,12 @@
 #include "filter_reads.h"
 #include "shame.h"
 
-uint64_t kmer_mask(int kmer_size) {
-    uint64_t mask = (1ll << (uint64_t)kmer_size) - 1;
+uintmax_t kmer_mask(int kmer_size) {
+    uintmax_t mask = (1ll << (uintmax_t)kmer_size) - 1;
     return mask;
 }
 
-uint64_t get_num_kmers(CJOB *settings, char *fafname) {
+uintmax_t get_num_kmers(CJOB *settings, char *fafname) {
     if(DEBUG_LEVEL >= 1) printf("Counting kmers in %s.\n", fafname);
     int kmer_size = settings->kmer_size;
     char *bvfname = get_bvfname_from_one_fafname(settings, fafname);
@@ -20,9 +20,9 @@ uint64_t get_num_kmers(CJOB *settings, char *fafname) {
     FILE *fafp = fopen(fafname, "r");
 
     char read[4096];
-    uint64_t current_read = 0;
-    uint64_t num_kmers = 0;
-    uint64_t num_lines = 0;
+    uintmax_t current_read = 0;
+    uintmax_t num_kmers = 0;
+    uintmax_t num_lines = 0;
     // For some reason, vim folds wrong if I inline this curly brace :/
     while(NULL != fgets(read, sizeof(read), fafp)) 
     {
@@ -37,13 +37,13 @@ uint64_t get_num_kmers(CJOB *settings, char *fafname) {
         }
     }
     if(DEBUG_LEVEL >= 1) {
-        printf("Done counting kmers in %s (%lli total in %lli lines).\n", fafname, num_kmers, current_read);
+        printf("Done counting kmers in %s (%ji total in %ji lines).\n", fafname, num_kmers, current_read);
     }
     fclose(fafp);
     return num_kmers;
 }
 
-uint64_t hash_of_base(char b) {
+uintmax_t hash_of_base(char b) {
     // Just some random numbers.
     switch(b) {
         case 'a': case 'A': return 0x000001d27d51ef41;
@@ -54,9 +54,9 @@ uint64_t hash_of_base(char b) {
     }
 }
 
-uint64_t hash_of_kmer(char *read, int kmer_size) {
-    uint64_t mask = kmer_mask(kmer_size);
-    uint64_t value = 0;
+uintmax_t hash_of_kmer(char *read, int kmer_size) {
+    uintmax_t mask = kmer_mask(kmer_size);
+    uintmax_t value = 0;
     int i = 0;
     for(i = 0; i < kmer_size; i++) {
         char b = read[i];
@@ -70,12 +70,12 @@ uint64_t hash_of_kmer(char *read, int kmer_size) {
 
 void index_read_into_hash(CJOB *settings, HASH *h, char* read) {
     int kmer_size = settings->kmer_size;
-    uint64_t mask = kmer_mask(kmer_size);
+    uintmax_t mask = kmer_mask(kmer_size);
     int len = strlen(read);
     int i;
     if(len < kmer_size) return;
-    uint64_t value = hash_of_kmer(read, kmer_size);
-    uint64_t bh;
+    uintmax_t value = hash_of_kmer(read, kmer_size);
+    uintmax_t bh;
     for(i = 1; i < len - kmer_size - 1; i++) {
         value <<= 1;
         value ^= hash_of_base(read[i + kmer_size - 1]);
@@ -86,7 +86,7 @@ void index_read_into_hash(CJOB *settings, HASH *h, char* read) {
 
 struct counter *search_read_in_hash(CJOB *settings, HASH *h, char* seq) {
     int kmer_size = settings->kmer_size;
-    uint64_t mask = kmer_mask(kmer_size);
+    uintmax_t mask = kmer_mask(kmer_size);
     int len = strlen(seq);
     int i;
     struct counter *same = calloc(1, sizeof(struct counter));
@@ -95,7 +95,7 @@ struct counter *search_read_in_hash(CJOB *settings, HASH *h, char* seq) {
         exit(EXIT_FAILURE);
     }
     if(len < kmer_size) return same;
-    uint64_t value = hash_of_kmer(seq, kmer_size);
+    uintmax_t value = hash_of_kmer(seq, kmer_size);
     for(i = 1; i < len - kmer_size - 1; i++) {
         value <<= 1;
         value ^= hash_of_base(seq[i + kmer_size - 1]);
@@ -110,7 +110,7 @@ struct counter *search_read_in_hash(CJOB *settings, HASH *h, char* seq) {
 }
 
 HASH *index_from_file(CJOB *settings, char *fafname) {
-    uint64_t num_kmers = get_num_kmers(settings, fafname);
+    uintmax_t num_kmers = get_num_kmers(settings, fafname);
     char *bvfname = get_bvfname_from_one_fafname(settings, fafname);
     HASH *h = hash_create(num_kmers);
     FILE *fafp;
@@ -130,7 +130,7 @@ HASH *index_from_file(CJOB *settings, char *fafname) {
 }
 
 BITVEC *search_file_in_hash(CJOB *settings, HASH *h, char *fafname) {
-    uint64_t num_kmers = get_num_kmers(settings, fafname);
+    uintmax_t num_kmers = get_num_kmers(settings, fafname);
     char *bvfname = get_bvfname_from_one_fafname(settings, fafname);
     FILE *fafp = fopen(fafname, "r");
     char read[65536];

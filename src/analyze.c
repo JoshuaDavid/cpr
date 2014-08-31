@@ -7,7 +7,7 @@
 
 BITVEC **get_filter_bvs(CJOB *settings, READSET *set) {
     BITVEC **bvs = calloc(set->num_files, sizeof(BITVEC *));
-    uint64_t i = 0;
+    uintmax_t i = 0;
     for(i = 0; i < set->num_files; i++) {
         char *fafname = set->filenames[i];
         char *bvfname = get_bvfname_from_one_fafname(settings, fafname);
@@ -18,7 +18,7 @@ BITVEC **get_filter_bvs(CJOB *settings, READSET *set) {
 
 BITVEC ***get_comparison_bvs(CJOB *settings, READSET *set_a, READSET *set_b) {
     BITVEC ***comparisons = calloc(set_a->num_files, sizeof(BITVEC **));
-    uint64_t i = 0, j = 0;
+    uintmax_t i = 0, j = 0;
     for(i = 0; i < set_a->num_files; i++) {
         comparisons[i] = calloc(set_b->num_files, sizeof(BITVEC *));
         for(j = 0; j < set_b->num_files; j++) {
@@ -35,31 +35,31 @@ void print_comparison(CJOB *settings, READSET *set_a, READSET *set_b) {
     BITVEC ***comparisons = get_comparison_bvs(settings, set_a, set_b);
     BITVEC **bvs_a = get_filter_bvs(settings, set_a);
     BITVEC **bvs_b = get_filter_bvs(settings, set_b);
-    uint64_t i = 0, j = 0;
+    uintmax_t i = 0, j = 0;
     for(i = 0; i < set_a->num_files; i++) {
         char *sfafname = set_a->filenames[i];
         char *sbvfname = get_bvfname_from_one_fafname(settings, sfafname);
         BITVEC *sbv = bv_read_from_file(sbvfname);
         printf("Counting reads in \"%s\" that occur in any of [\n", sfafname);
         BITVEC *acc = bv_read_from_file(sfafname);
-        uint64_t sbv_count = bv_count_bits(sbv);
+        uintmax_t sbv_count = bv_count_bits(sbv);
         BITVEC *next;
         for(j = 0; j < set_b->num_files; j++) {
             char *ifafname = set_a->filenames[j];
             char *ibvfname = get_bvfname_from_one_fafname(settings, ifafname);
             BITVEC *ibv = bv_read_from_file(ibvfname);
-            uint64_t ibv_count = bv_count_bits(ibv);
+            uintmax_t ibv_count = bv_count_bits(ibv);
             char *bvfname = get_bvfname_of_index_and_search(settings, ifafname, sfafname);
             BITVEC *intersection = bv_read_from_file(bvfname);
             next = bv_or(acc, intersection);
             printf("\n\t\"%s\", ", sfafname);
             fflush(NULL);
-            uint64_t acc_count = bv_count_bits(acc);
-            uint64_t int_count = bv_count_bits(intersection);
-            uint64_t next_count = bv_count_bits(next);
+            uintmax_t acc_count = bv_count_bits(acc);
+            uintmax_t int_count = bv_count_bits(intersection);
+            uintmax_t next_count = bv_count_bits(next);
             acc = next;
             bv_destroy(acc); // Fix memory leak
-            printf("\n%s(%lli) IN %s(%lli): %lli\n", ibvfname, ibv_count, sbvfname, sbv_count, int_count);
+            printf("\n%s(%ju) IN %s(%ju): %ju\n", ibvfname, ibv_count, sbvfname, sbv_count, int_count);
         }
         printf("\n]\n");
     }
@@ -92,13 +92,13 @@ void compare_files_within_set(CJOB *settings, READSET *set) {
         float *row = NULL;
         similarity[i] = calloc(set->num_files, sizeof(float));
         char *ifafname = set->filenames[i];
-        uint64_t num_reads_indexed = bv_count_bits(bvs[i]);
-        printf("%s: %lli\n", ifafname, num_reads_indexed);
+        uintmax_t num_reads_indexed = bv_count_bits(bvs[i]);
+        printf("%s: %ju\n", ifafname, num_reads_indexed);
         for(j = 0; j < set->num_files; j++) {
             char *sfafname = set->filenames[j];
             char *bvfname = get_bvfname_of_index_and_search(settings, ifafname, sfafname);
             // Segfaults here for some reason
-            uint64_t num_index_in_search = bv_count_bits(comparisons[i][j]);
+            uintmax_t num_index_in_search = bv_count_bits(comparisons[i][j]);
             similarity[i][j] = (float) num_index_in_search ;// (float) num_reads_indexed;
         }
     }
@@ -113,7 +113,7 @@ void compare_files_within_set(CJOB *settings, READSET *set) {
     for(i = 0; i < set->num_files; i++) {
         char *ifafname = set->filenames[i];
         printf("%s", ifafname);
-        uint64_t num_reads_indexed = bv_count_bits(bvs[i]);
+        uintmax_t num_reads_indexed = bv_count_bits(bvs[i]);
         for(j = 0; j < set->num_files; j++) {
             char *sfafname = set->filenames[j];
             printf(";%7.0f", similarity[i][j]);
@@ -127,13 +127,13 @@ void compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
     BITVEC **bvs_a = get_filter_bvs(settings, set_a);
     BITVEC **bvs_b = get_filter_bvs(settings, set_b);
     VERIFY_NONEMPTY(bvs_a);
-    uint64_t i = 0, j = 0;
+    uintmax_t i = 0, j = 0;
     for(i = 0; i < set_a->num_files; i++) {
 
         char *sfafname  = set_a->filenames[i];
         char *sbvfname  = get_bvfname_from_one_fafname(settings, sfafname);
         BITVEC *sbv  = bv_read_from_file(sbvfname);
-        uint64_t sbvcount  = bv_count_bits(sbv);
+        uintmax_t sbvcount  = bv_count_bits(sbv);
 
         BITVEC *acc = bv_create(sbv->num_bits);
         BITVEC *next = NULL;
@@ -143,20 +143,20 @@ void compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
             char *ifafname  = set_b->filenames[j];
             char *ibvfname  = get_bvfname_from_one_fafname(settings, ifafname);
             BITVEC *ibv  = bv_read_from_file(ibvfname);
-            uint64_t ibvcount  = bv_count_bits(ibv);
+            uintmax_t ibvcount  = bv_count_bits(ibv);
 
             char *isbvfname = get_bvfname_of_index_and_search(settings, ifafname, sfafname);
             BITVEC *isbv = bv_read_from_file(isbvfname);
-            uint64_t isbvcount = bv_count_bits(isbv);
+            uintmax_t isbvcount = bv_count_bits(isbv);
 
-            uint64_t acc_count = bv_count_bits(acc);
+            uintmax_t acc_count = bv_count_bits(acc);
             next = bv_or(acc, isbv);
             acc = next;
-            uint64_t next_count = bv_count_bits(acc);
+            uintmax_t next_count = bv_count_bits(acc);
 
-            printf("%s(%lli) in %s so far: %lli\n", sfafname, sbvcount, set_b->name, acc_count);
-            printf("%s(%lli) in %s(%lli): %lli\n", sfafname, sbvcount, ifafname, ibvcount, isbvcount);
-            printf("%s(%lli) in %s so far: %lli\n", sfafname, sbvcount, set_b->name, next_count);
+            printf("%s(%ju) in %s so far: %ju\n", sfafname, sbvcount, set_b->name, acc_count);
+            printf("%s(%ju) in %s(%ju): %ju\n", sfafname, sbvcount, ifafname, ibvcount, isbvcount);
+            printf("%s(%ju) in %s so far: %ju\n", sfafname, sbvcount, set_b->name, next_count);
         }
 
         bv_destroy(acc);

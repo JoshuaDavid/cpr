@@ -26,18 +26,18 @@ uint8_t bits_in_byte[256] = { 0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,1,2,2,3,2,3,3,4,
 
 BITVEC {
     char    *values;
-    uint64_t _size; // length IN BYTES including crap at front
-    uint64_t num_bits;
-    uint64_t offset; // Offset in BYTES
+    uintmax_t _size; // length IN BYTES including crap at front
+    uintmax_t num_bits;
+    uintmax_t offset; // Offset in BYTES
 };
 
 // Consistent naming scheme
-BITVEC *bv_create(uint64_t num_bits) {
+BITVEC *bv_create(uintmax_t num_bits) {
     BITVEC *bv = calloc(1, sizeof(BITVEC));
-    uint64_t num_bytes = 1 + (num_bits / CHAR_BIT);
+    uintmax_t num_bytes = 1 + (num_bits / CHAR_BIT);
     char *values = mmap(NULL, num_bytes, PROT_READ | PROT_WRITE,
             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    uint64_t i = 0;
+    uintmax_t i = 0;
     for(i = 0; i < num_bytes; i++) {
         values[i] = 0;
     }
@@ -59,13 +59,13 @@ BITVEC *bv_read_from_file(char *bvfname) {
     struct stat st_bv;
     assert(0 == fstat(bvfd, &st_bv));
     // Align with page boundary
-    uint64_t size_bv = st_bv.st_size;
-    uint64_t fsize = size_bv;
+    uintmax_t size_bv = st_bv.st_size;
+    uintmax_t fsize = size_bv;
     off_t pagesize = getpagesize();
     if(fsize % pagesize != 0) {
         fsize += pagesize - fsize % pagesize;
         if(fsize != size_bv) {
-            printf("Expanding %i from %llx bytes to %llx bytes.\n", bvfd, size_bv, fsize);
+            printf("Expanding %i from %jx bytes to %jx bytes.\n", bvfd, size_bv, fsize);
             if(0 != ftruncate(bvfd, fsize)) {
                 perror("Could not resize file. ftruncate");
                 exit(EXIT_FAILURE);
@@ -102,7 +102,7 @@ void bv_save_to_file(BITVEC *bv, char *fname) {
         exit(EXIT_FAILURE);
     }
     FILE *fp = fopen(fname, "wb");
-    uint64_t fsize = bv->_size;
+    uintmax_t fsize = bv->_size;
     // Align with page boundary
     off_t pagesize = getpagesize();
     if(fsize % pagesize != 0) {
@@ -119,9 +119,9 @@ void bv_destroy(BITVEC *bv) {
     free(bv);
 }
 
-int bv_get(BITVEC *bv, uint64_t index) {
+int bv_get(BITVEC *bv, uintmax_t index) {
     index += (CHAR_BIT * bv->offset);
-    uint64_t byte_index = (index / CHAR_BIT);
+    uintmax_t byte_index = (index / CHAR_BIT);
     if(byte_index >= bv->_size) {
         // Just return 0 if we're looking past the end, not a big deal
         return 0;
@@ -132,9 +132,9 @@ int bv_get(BITVEC *bv, uint64_t index) {
     return c && 1;
 }
 
-void bv_set(BITVEC *bv, uint64_t index, int val) {
+void bv_set(BITVEC *bv, uintmax_t index, int val) {
     index += (CHAR_BIT * bv->offset);
-    uint64_t byte_index = (index / CHAR_BIT);
+    uintmax_t byte_index = (index / CHAR_BIT);
     char c = bv->values[byte_index];
     char bit_mask = (char)(1 << (index % CHAR_BIT));
     if(val) c |= (char) bit_mask;
@@ -142,9 +142,9 @@ void bv_set(BITVEC *bv, uint64_t index, int val) {
     bv->values[byte_index] = c;
 }
 
-uint64_t bv_count_bits(BITVEC *bv) {
-    uint64_t i;
-    uint64_t count = 0;
+uintmax_t bv_count_bits(BITVEC *bv) {
+    uintmax_t i;
+    uintmax_t count = 0;
     for(i = 0; i < bv->num_bits; i++) {
         // There is a better way of doing this, but unless it's a performance
         // issue, this is the clearest way
@@ -155,7 +155,7 @@ uint64_t bv_count_bits(BITVEC *bv) {
 
 BITVEC *bv_copy(BITVEC *bv) {
     BITVEC *ret = bv_create(bv->num_bits);
-    uint64_t i;
+    uintmax_t i;
     for(i = 0; i < bv->num_bits; i++) {
         bv_set(ret, i, bv_get(bv, i));
     }
@@ -164,10 +164,10 @@ BITVEC *bv_copy(BITVEC *bv) {
 
 BITVEC *bv_and(BITVEC *bva, BITVEC *bvb) {
     // Minimum of the lengths, as the rest is zeroed anyway
-    uint64_t num_bits = bva->num_bits < bvb->num_bits ? 
+    uintmax_t num_bits = bva->num_bits < bvb->num_bits ? 
                         bva->num_bits : bvb->num_bits;
     BITVEC *ret = bv_create(num_bits);
-    uint64_t i = 0;
+    uintmax_t i = 0;
     for(i = 0;  i < num_bits; i++) {
         bv_set(ret, i, bv_get(bva, i) & bv_get(bvb, i));
     }
@@ -176,10 +176,10 @@ BITVEC *bv_and(BITVEC *bva, BITVEC *bvb) {
 
 BITVEC *bv_or(BITVEC *bva, BITVEC *bvb) {
     // Minimum of the lengths, as the rest is zeroed anyway
-    uint64_t num_bits = bva->num_bits < bvb->num_bits ? 
+    uintmax_t num_bits = bva->num_bits < bvb->num_bits ? 
                         bva->num_bits : bvb->num_bits;
     BITVEC *ret = bv_create(num_bits);
-    uint64_t i = 0;
+    uintmax_t i = 0;
     for(i = 0;  i < num_bits; i++) {
         bv_set(ret, i, bv_get(bva, i) | bv_get(bvb, i));
     }
@@ -188,10 +188,10 @@ BITVEC *bv_or(BITVEC *bva, BITVEC *bvb) {
 
 BITVEC *bv_xor(BITVEC *bva, BITVEC *bvb) {
     // Minimum of the lengths, as the rest is zeroed anyway
-    uint64_t num_bits = bva->num_bits < bvb->num_bits ? 
+    uintmax_t num_bits = bva->num_bits < bvb->num_bits ? 
                         bva->num_bits : bvb->num_bits;
     BITVEC *ret = bv_create(num_bits);
-    uint64_t i = 0;
+    uintmax_t i = 0;
     for(i = 0;  i < num_bits; i++) {
         bv_set(ret, i, bv_get(bva, i) ^ bv_get(bvb, i));
     }
