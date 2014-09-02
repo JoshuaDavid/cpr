@@ -144,7 +144,7 @@ BITVEC *search_file_in_hash(CJOB *settings, HASH *h, char *fafname) {
                 if(c->t >= settings->min_shared_kmers) {
                     bv_set(sbv, readnum, 1);
                 } else {
-                    bv_set(sbv, readnum, 1);
+                    bv_set(sbv, readnum, 0);
                 }
                 free(c);
             }

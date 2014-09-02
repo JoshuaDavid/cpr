@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include "counter.h"
 #include "bit_vector.h"
 #include "commet_job.h"
 #include "filter_reads.h"
@@ -122,12 +124,13 @@ void compare_files_within_set(CJOB *settings, READSET *set) {
     }
 }
 
-void compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
-    printf("Comparing sets %s and %s.\n", set_a->name, set_b->name);
+COUNTER *compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
+    if(DEBUG_LEVEL >= 2) printf("Comparing sets %s and %s.\n", set_a->name, set_b->name);
     BITVEC **bvs_a = get_filter_bvs(settings, set_a);
     BITVEC **bvs_b = get_filter_bvs(settings, set_b);
     VERIFY_NONEMPTY(bvs_a);
     uintmax_t i = 0, j = 0;
+    COUNTER *shared = calloc(1, sizeof(COUNTER));
     for(i = 0; i < set_a->num_files; i++) {
 
         char *sfafname  = set_a->filenames[i];
@@ -136,7 +139,6 @@ void compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
         uintmax_t sbvcount  = bv_count_bits(sbv);
 
         BITVEC *acc = bv_create(sbv->num_bits);
-        BITVEC *next = NULL;
 
         for(j = 0; j < set_b->num_files; j++) {
 
@@ -149,28 +151,49 @@ void compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
             BITVEC *isbv = bv_read_from_file(isbvfname);
             uintmax_t isbvcount = bv_count_bits(isbv);
 
-            uintmax_t acc_count = bv_count_bits(acc);
-            next = bv_or(acc, isbv);
-            acc = next;
-            uintmax_t next_count = bv_count_bits(acc);
+            acc = bv_or(acc, isbv);
 
-            printf("%s(%ju) in %s so far: %ju\n", sfafname, sbvcount, set_b->name, acc_count);
-            printf("%s(%ju) in %s(%ju): %ju\n", sfafname, sbvcount, ifafname, ibvcount, isbvcount);
-            printf("%s(%ju) in %s so far: %ju\n", sfafname, sbvcount, set_b->name, next_count);
         }
+        uintmax_t shared_count = bv_count_bits(acc);
+        if(DEBUG_LEVEL >= 2) printf("%s(%ju) in %s: %ju\n", sfafname, sbvcount, set_b->name, shared_count);
+        shared->t += shared_count;
+        shared->f += sbvcount - shared_count;
 
         bv_destroy(acc);
         bv_destroy(sbv);
     }
+    if(DEBUG_LEVEL >= 1) {
+        printf("%s     in %s: %ju\n", set_a->name, set_b->name, shared->t);
+        printf("%s NOT in %s: %ju\n", set_a->name, set_b->name, shared->f);
+        puts("");
+    }
+    return shared;
 }
 
 void compare_all_sets(CJOB *settings) {
     int i = 0, j = 0;
     READSET **sets = settings->sets;
+    COUNTER ***shared = calloc(settings->num_sets, sizeof(COUNTER **));
     for(i = 0; i < settings->num_sets; i++) {
+        shared[i] = calloc(settings->num_sets, sizeof(COUNTER *));
         for(j = 0; j < settings->num_sets; j++) {
-            compare_two_sets(settings, sets[i], sets[j]);
+            shared[i][j] = compare_two_sets(settings, sets[i], sets[j]);
         }
+    }
+
+    if(DEBUG_LEVEL >= 1) {
+        printf("Percentage of set on left which appears in set on top\n");
+    }
+    for(i = 0; i < settings->num_sets; i++) {
+        printf(";%s", settings->sets[i]->name);
+    }
+    printf("\n");
+    for(i = 0; i < settings->num_sets; i++) {
+        printf("%s", settings->sets[i]->name);
+        for(j = 0; j < settings->num_sets; j++) {
+            printf(";%7f", 100.0 * (float) shared[i][j]->t / (float)(shared[i][j]->t + shared[i][j] ->f));
+        }
+        printf("\n");
     }
 }
 

@@ -34,7 +34,10 @@ BITVEC {
 // Consistent naming scheme
 BITVEC *bv_create(uintmax_t num_bits) {
     BITVEC *bv = calloc(1, sizeof(BITVEC));
-    uintmax_t num_bytes = 1 + (num_bits / CHAR_BIT);
+    uintmax_t num_bytes = (num_bits / CHAR_BIT);
+    if(num_bits % CHAR_BIT > 0) {
+        num_bytes += 1;
+    }
     char *values = mmap(NULL, num_bytes, PROT_READ | PROT_WRITE,
             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     uintmax_t i = 0;
@@ -50,7 +53,7 @@ BITVEC *bv_create(uintmax_t num_bits) {
 
 BITVEC *bv_read_from_file(char *bvfname) {
     FILE *bvfp; // Bit vector file pointer
-    bvfp = fopen(bvfname, "rw");
+    bvfp = fopen(bvfname, "rw+");
     if(NULL == bvfp) {
         perror("fopen:");
         exit(EXIT_FAILURE);
@@ -65,7 +68,7 @@ BITVEC *bv_read_from_file(char *bvfname) {
     if(fsize % pagesize != 0) {
         fsize += pagesize - fsize % pagesize;
         if(fsize != size_bv) {
-            printf("Expanding %i from %jx bytes to %jx bytes.\n", bvfd, size_bv, fsize);
+            printf("Expanding %s(%i) from %jx bytes to %jx bytes.\n", bvfname, bvfd, size_bv, fsize);
             if(0 != ftruncate(bvfd, fsize)) {
                 perror("Could not resize file. ftruncate");
                 exit(EXIT_FAILURE);
@@ -76,7 +79,7 @@ BITVEC *bv_read_from_file(char *bvfname) {
     fclose(bvfp);
     BITVEC *bv = calloc(1, sizeof(BITVEC));
     bv->values = values;
-    bv->_size = size_bv + 1;
+    bv->_size = size_bv;
     bv->offset = 0;
     int i;
     if(0 == strncmp(bv->values, "--------", 8)) {
