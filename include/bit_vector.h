@@ -1,28 +1,39 @@
 #ifndef BIT_VECTOR_H
 #define BIT_VECTOR_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <sys/mman.h>
-#include <assert.h>
-#include <string.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/mman.h>
+#include "shame.h"
 
 #define BITVEC struct bit_vector
 
-uint8_t bits_in_byte[256] = { 0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,1,2,2,3,2,3,3,4,
-    2,3,3,4,3,4,4,5,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,
-    5,5,6,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,2,3,
-    3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,1,2,2,3,2,3,3,
-    4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,2,3,3,4,3,4,4,5,3,4,4,5,
-    4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,
-    4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,
-    6,7,5,6,6,7,6,7,7,8 };
+static uint8_t bits_in_byte[256] = { 
+    0, 1,   1, 2,      1, 2,   2, 3,           1, 2,   2, 3,      2, 3,   3, 4,
+    1, 2,   2, 3,      2, 3,   3, 4,           2, 3,   3, 4,      3, 4,   4, 5,
+
+    1, 2,   2, 3,      2, 3,   3, 4,           2, 3,   3, 4,      3, 4,   4, 5,
+    2, 3,   3, 4,      3, 4,   4, 5,           3, 4,   4, 5,      4, 5,   5, 6,
+
+
+    1, 2,   2, 3,      2, 3,   3, 4,           2, 3,   3, 4,      3, 4,   4, 5,
+    2, 3,   3, 4,      3, 4,   4, 5,           3, 4,   4, 5,      4, 5,   5, 6,
+
+    2, 3,   3, 4,      3, 4,   4, 5,           3, 4,   4, 5,      4, 5,   5, 6,
+    3, 4,   4, 5,      4, 5,   5, 6,           4, 5,   5, 6,      5, 6,   6, 7,
+
+
+
+    1, 2,   2, 3,      2, 3,   3, 4,           2, 3,   3, 4,      3, 4,   4, 5,
+    2, 3,   3, 4,      3, 4,   4, 5,           3, 4,   4, 5,      4, 5,   5, 6,
+
+    2, 3,   3, 4,      3, 4,   4, 5,           3, 4,   4, 5,      4, 5,   5, 6,
+    3, 4,   4, 5,      4, 5,   5, 6,           4, 5,   5, 6,      5, 6,   6, 7,
+
+
+    2, 3,   3, 4,      3, 4,   4, 5,           3, 4,   4, 5,      4, 5,   5, 6,
+    3, 4,   4, 5,      4, 5,   5, 6,           4, 5,   5, 6,      5, 6,   6, 7,
+
+    3, 4,   4, 5,      4, 5,   5, 6,           4, 5,   5, 6,      5, 6,   6, 7,
+    4, 5,   5, 6,      5, 6,   6, 7,           5, 6,   6, 7,      6, 7,   7, 8 
+};
 
 BITVEC {
     char    *values;
@@ -100,10 +111,13 @@ BITVEC *bv_read_from_file(char *bvfname) {
 }
 
 void bv_save_to_file(BITVEC *bv, char *fname) {
+    if(DEBUG_LEVEL >= 1) { printf("Saving bit vector to %s\n", fname); }
     if(bv == NULL) {
         perror("Bit vector is null: bv_save_to_file");
         exit(EXIT_FAILURE);
     }
+    assert(0 == mkdirp(dirnameof(fname)));
+    if(DEBUG_LEVEL >= 1) { printf("Saving bit vector to %s\n", fname); }
     FILE *fp = fopen(fname, "wb");
     uintmax_t fsize = bv->_size;
     // Align with page boundary
@@ -148,10 +162,17 @@ void bv_set(BITVEC *bv, uintmax_t index, int val) {
 uintmax_t bv_count_bits(BITVEC *bv) {
     uintmax_t i;
     uintmax_t count = 0;
-    for(i = 0; i < bv->num_bits; i++) {
+    for(i = 0; i < bv->_size; i++) {
         // There is a better way of doing this, but unless it's a performance
         // issue, this is the clearest way
-        count += bv_get(bv, i);
+        int j = 0;
+        for(j = 0; j < 8;  j++) {
+            if(1 & (bv->values[i] >> j)) {
+                count++;
+            }
+        }
+        // This way is buggy.
+        // count += bits_in_byte[bv->values[i]];
     }
     return count;
 }
@@ -171,8 +192,8 @@ BITVEC *bv_and(BITVEC *bva, BITVEC *bvb) {
                         bva->num_bits : bvb->num_bits;
     BITVEC *ret = bv_create(num_bits);
     uintmax_t i = 0;
-    for(i = 0;  i < num_bits; i++) {
-        bv_set(ret, i, bv_get(bva, i) & bv_get(bvb, i));
+    for(i = 0; i < ret->_size; i++) {
+        ret->values[i] = bva->values[i] & bvb->values[i];
     }
     return ret;
 }
@@ -183,8 +204,8 @@ BITVEC *bv_or(BITVEC *bva, BITVEC *bvb) {
                         bva->num_bits : bvb->num_bits;
     BITVEC *ret = bv_create(num_bits);
     uintmax_t i = 0;
-    for(i = 0;  i < num_bits; i++) {
-        bv_set(ret, i, bv_get(bva, i) | bv_get(bvb, i));
+    for(i = 0; i < ret->_size; i++) {
+        ret->values[i] = bva->values[i] | bvb->values[i];
     }
     return ret;
 }
@@ -195,8 +216,8 @@ BITVEC *bv_xor(BITVEC *bva, BITVEC *bvb) {
                         bva->num_bits : bvb->num_bits;
     BITVEC *ret = bv_create(num_bits);
     uintmax_t i = 0;
-    for(i = 0;  i < num_bits; i++) {
-        bv_set(ret, i, bv_get(bva, i) ^ bv_get(bvb, i));
+    for(i = 0; i < ret->_size; i++) {
+        ret->values[i] = bva->values[i] ^ bvb->values[i];
     }
     return ret;
 }

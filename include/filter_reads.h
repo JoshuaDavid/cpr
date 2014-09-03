@@ -86,16 +86,18 @@ BITVEC *filter_reads(CJOB *settings, char *fafname) {
 
 char *get_bvfname_from_one_fafname(CJOB *settings, char *fafname) {
     char _bvfname[4096];
-    sprintf(_bvfname, "%s/%s.bv", settings->output_directory, fafname);
+    if(DEBUG_LEVEL >= 2) printf("basenameof(fafname) == %s\n", basenameof(fafname));
+    sprintf(_bvfname, "%s/%s.bv", settings->output_directory, basenameof(fafname));
     char *bvfname = calloc(strlen(_bvfname) + 1, sizeof(char));
     strcpy(bvfname, _bvfname);
+    if(DEBUG_LEVEL >= 2) printf("bvfname == %s\n", bvfname);
     return bvfname;
 }
 
 char *get_bvfname_of_index_and_search(CJOB *settings, char *ifafname, char *sfafname) {
     char _bvfname[4096];
     sprintf(_bvfname, "%s/%s_in_%s.bv", settings->output_directory, 
-            sfafname, ifafname);
+            basenameof(sfafname), basenameof(ifafname));
     char *bvfname = calloc(strlen(_bvfname) + 1, sizeof(char));
     strcpy(bvfname, _bvfname);
     return bvfname;
