@@ -64,11 +64,17 @@ BITVEC *filter_reads(CJOB *settings, char *fafname) {
         if(read[0] == '>') {
             // Name of read, ignore
         } else {
-            if(  strlen(read) < settings->min_length_of_read
-              || num_ns(read) <= settings->max_n_in_read
-              || shannon_entropy(read) < settings->min_entropy ) {
+            if(strlen(read) < settings->min_length_of_read) {
+                DBG(6) printf("READ TOO SHORT: %s\n", read);
+                bv_set(bv, readnum, 0);
+            } else if(num_ns(read) > settings->max_n_in_read) {
+                DBG(6) printf("TOO MANY NS:    %s\n", read);
+                bv_set(bv, readnum, 0);
+            } else if(shannon_entropy(read) < settings->min_entropy ) {
+                DBG(6) printf("LOW ENTROPY:    %s\n", read);
                 bv_set(bv, readnum, 0);
             } else {
+                DBG(6) printf("ACCEPTING:    %s\n", read);
                 bv_set(bv, readnum, 1);
             }
             readnum++;

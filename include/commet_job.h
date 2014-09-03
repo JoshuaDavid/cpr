@@ -149,8 +149,11 @@ void print_usage(void) {
 CJOB *get_settings(int argc, char **argv) {
     CJOB *settings = default_commet_job();
     char c;
-    while((c = getopt(argc, argv, "m:e:l:k:n:o:p:t:h")) != -1) {
+    while((c = getopt(argc, argv, "m:e:l:k:n:o:p:t:hv")) != -1) {
         switch(c) {
+            case 'v':
+                DEBUG_LEVEL++;
+                break;
             case 'e':
                 sscanf(optarg, "%f", &(settings->min_entropy));
                 break;
