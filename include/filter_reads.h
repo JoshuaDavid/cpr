@@ -91,12 +91,13 @@ BITVEC *filter_reads(CJOB *settings, char *fafname) {
 }
 
 char *get_bvfname_from_one_fafname(CJOB *settings, char *fafname) {
+    DBG(3) printf("basenameof(\"%s\")\n", fafname);
     char _bvfname[4096];
-    if(DEBUG_LEVEL >= 2) printf("basenameof(fafname) == %s\n", basenameof(fafname));
+    DBG(2) printf("basenameof(\"%s\") == \"%s\"\n", fafname, basenameof(fafname));
     sprintf(_bvfname, "%s/%s.bv", settings->output_directory, basenameof(fafname));
     char *bvfname = calloc(strlen(_bvfname) + 1, sizeof(char));
     strcpy(bvfname, _bvfname);
-    if(DEBUG_LEVEL >= 2) printf("bvfname == %s\n", bvfname);
+    DBG(2) printf("bvfname == %s\n", bvfname);
     return bvfname;
 }
 
@@ -143,8 +144,8 @@ void create_all_filter_files_parallel(CJOB *settings) {
             pid_t pid = fork();
             if(pid == -1) {
                 perror("Fork failed!\n");
-                exit(EXIT_FAILURE);
-            } else if(pid == 0) {
+            } 
+            if(pid == 0 || pid == -1) {
                 char *fafname = set->filenames[j];
                 char *bvfname = get_bvfname_from_one_fafname(settings, fafname);
                 BITVEC *bv = filter_reads(settings, fafname);

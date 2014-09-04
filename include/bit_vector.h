@@ -66,6 +66,7 @@ BITVEC *bv_read_from_file(char *bvfname) {
     FILE *bvfp; // Bit vector file pointer
     bvfp = fopen(bvfname, "rw+");
     if(NULL == bvfp) {
+        DBG(0) printf("Could not read from file \"%s\". \n", bvfname);
         perror("fopen:");
         exit(EXIT_FAILURE);
     }

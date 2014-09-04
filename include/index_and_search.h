@@ -6,6 +6,9 @@
 #include "filter_reads.h"
 #include "shame.h"
 
+int MAX_THREADS = 20;
+int USED_THREADS = 0;
+
 uintmax_t kmer_mask(int kmer_size) {
     uintmax_t mask = (1ll << (uintmax_t)kmer_size) - 1;
     return mask;
@@ -193,8 +196,8 @@ void create_search_files_of_one_index_parallel(CJOB *settings, char *ifafname) {
             pid_t pid = fork();
             if(pid == -1) {
                 perror("Fork failed!\n");
-                exit(EXIT_FAILURE);
-            } else if(pid == 0) {
+            } 
+            if(pid == 0 || pid == -1) {
             // End forking code block
 
             char *sfafname = set->filenames[j];
@@ -264,8 +267,8 @@ void create_all_search_files_parallel(CJOB *settings, int parallel) {
             pid_t pid = fork();
             if(pid == -1) {
                 perror("Fork failed!\n");
-                exit(EXIT_FAILURE);
-            } else if(pid == 0) {
+            } 
+            if(pid == 0 || pid == -1) {
             // End forking code block
 
             char *ifafname = set->filenames[j];
