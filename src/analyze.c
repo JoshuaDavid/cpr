@@ -170,7 +170,7 @@ COUNTER *compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
     return shared;
 }
 
-void compare_all_sets(CJOB *settings) {
+COUNTER ***get_raw_comparison_matrix(CJOB *settings) {
     int i = 0, j = 0;
     READSET **sets = settings->sets;
     COUNTER ***shared = calloc(settings->num_sets, sizeof(COUNTER **));
@@ -180,10 +180,16 @@ void compare_all_sets(CJOB *settings) {
             shared[i][j] = compare_two_sets(settings, sets[i], sets[j]);
         }
     }
+    return shared;
+}
+
+void print_comparison_percents(CJOB *settings, COUNTER ***shared) {
+    int i = 0, j = 0;
 
     if(DEBUG_LEVEL >= 1) {
         printf("Percentage of set on left which appears in set on top\n");
     }
+    printf(" ");
     for(i = 0; i < settings->num_sets; i++) {
         printf(";%s", settings->sets[i]->name);
     }
@@ -191,7 +197,7 @@ void compare_all_sets(CJOB *settings) {
     for(i = 0; i < settings->num_sets; i++) {
         printf("%s", settings->sets[i]->name);
         for(j = 0; j < settings->num_sets; j++) {
-            printf(";%7f", 100.0 * (float) shared[i][j]->t / (float)(shared[i][j]->t + shared[i][j] ->f));
+            printf(";%7f%%", 100.0 * (float) shared[i][j]->t / (float)(shared[i][j]->t + shared[i][j] ->f));
         }
         printf("\n");
     }
@@ -199,6 +205,7 @@ void compare_all_sets(CJOB *settings) {
 
 int main(int argc, char **argv) {
     CJOB *settings = get_settings(argc, argv);
-    compare_all_sets(settings);
+    COUNTER ***shared = get_raw_comparison_matrix(settings);
+    print_comparison_percents(settings, shared);
     return EXIT_SUCCESS;
 }

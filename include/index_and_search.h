@@ -42,7 +42,11 @@ uintmax_t get_num_kmers(CJOB *settings, char *fafname) {
     if(DEBUG_LEVEL >= 1) {
         printf("Done counting kmers in %s (%ji total in %ji lines).\n", fafname, num_kmers, current_read);
     }
+
     fclose(fafp);
+    free(bv);
+    free(bvfname);
+
     return num_kmers;
 }
 
@@ -129,6 +133,7 @@ HASH *index_from_file(CJOB *settings, char *fafname) {
             readnum++;
         }
     }
+    free(bvfname);
     return h;
 }
 
@@ -154,6 +159,8 @@ BITVEC *search_file_in_hash(CJOB *settings, HASH *h, char *fafname) {
             readnum++;
         }
     }
+    free(bvfname);
+    free(bv);
     return sbv;
 }
 
@@ -169,8 +176,11 @@ void create_search_files_of_one_index_serial(CJOB *settings, char *ifafname) {
             char *bvfname = get_bvfname_of_index_and_search(settings, ifafname, sfafname);
             BITVEC *bv = search_file_in_hash(settings, h, sfafname);
             bv_save_to_file(bv, bvfname);
+            free(bvfname);
+            free(bv);
         }
     }
+    free(ibvfname);
     hash_destroy(h);
 }
 
@@ -204,9 +214,11 @@ void create_search_files_of_one_index_parallel(CJOB *settings, char *ifafname) {
             char *bvfname = get_bvfname_of_index_and_search(settings, ifafname, sfafname);
             BITVEC *bv = search_file_in_hash(settings, h, sfafname);
             bv_save_to_file(bv, bvfname);
+            free(bvfname);
+            free(bv);
 
             // Begin forking code block
-            exit(EXIT_SUCCESS);
+            if(pid == 0) exit(EXIT_SUCCESS);
             } else {
                 pids[pid_counter] = pid;
                 pid_counter++;
@@ -224,6 +236,7 @@ void create_search_files_of_one_index_parallel(CJOB *settings, char *ifafname) {
     }
     // End forking code block
 
+    free(ibvfname);
     hash_destroy(h);
 }
 
@@ -275,7 +288,7 @@ void create_all_search_files_parallel(CJOB *settings, int parallel) {
             create_search_files_of_one_index(settings, ifafname, parallel);
 
             // Begin forking code block
-            exit(EXIT_SUCCESS);
+            if(pid == 0) exit(EXIT_SUCCESS);
             } else {
                 pids[pid_counter] = pid;
                 pid_counter++;

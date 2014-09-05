@@ -37,7 +37,7 @@ READSET **read_sets_file(char *filename) {
         // This method is a bit of a beast, but it works.
         j = 0;
         while(line[++j] != ':');
-        char *name = calloc(j, sizeof(char));
+        char *name = calloc(j + 1, sizeof(char));
         strncpy(name, line, j + 1);
         name[j] = '\0';
         READSET *set = calloc(1, sizeof(READSET));
@@ -46,12 +46,12 @@ READSET **read_sets_file(char *filename) {
         while(line[j] == ' ' || line[j] == ':') j++;
         int k = j;
         while(line[++k] != '\0');
-        char *p = calloc(k - j, sizeof(char));
+        char *p = calloc(k - j + 2, sizeof(char));
         strncpy(p, line + j, k - j + 1);
         p[k - j] = '\0';
         int f = 0;
         int newfname = 1;
-        int len = strlen(p);
+        int len = strlen(p) + 1;
         char *filename = p;
         while(*p) {
             if(*p == ' ' || *p == '\n' || *p == ';') {

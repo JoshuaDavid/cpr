@@ -112,13 +112,15 @@ BITVEC *bv_read_from_file(char *bvfname) {
 }
 
 void bv_save_to_file(BITVEC *bv, char *fname) {
-    if(DEBUG_LEVEL >= 1) { printf("Saving bit vector to %s\n", fname); }
+    DBG(1) { printf("Saving bit vector to %s\n", fname); }
     if(bv == NULL) {
         perror("Bit vector is null: bv_save_to_file");
         exit(EXIT_FAILURE);
     }
-    assert(0 == mkdirp(dirnameof(fname)));
-    if(DEBUG_LEVEL >= 1) { printf("Saving bit vector to %s\n", fname); }
+    char *savedir = dirnameof(fname);
+    assert(0 == mkdirp(savedir));
+    free(savedir);
+    DBG(3) { printf("Saving bit vector to %s\n", fname); }
     FILE *fp = fopen(fname, "wb");
     uintmax_t fsize = bv->_size;
     // Align with page boundary

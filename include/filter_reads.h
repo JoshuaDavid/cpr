@@ -93,18 +93,24 @@ BITVEC *filter_reads(CJOB *settings, char *fafname) {
 char *get_bvfname_from_one_fafname(CJOB *settings, char *fafname) {
     DBG(3) printf("basenameof(\"%s\")\n", fafname);
     char _bvfname[4096];
-    DBG(2) printf("basenameof(\"%s\") == \"%s\"\n", fafname, basenameof(fafname));
-    sprintf(_bvfname, "%s/%s.bv", settings->output_directory, basenameof(fafname));
+    char *bname = basenameof(fafname);
+    DBG(2) printf("basenameof(\"%s\") == \"%s\"\n", fafname, bname);
+    sprintf(_bvfname, "%s/%s.bv", settings->output_directory, bname);
     char *bvfname = calloc(strlen(_bvfname) + 1, sizeof(char));
     strcpy(bvfname, _bvfname);
     DBG(2) printf("bvfname == %s\n", bvfname);
+    free(bname);
     return bvfname;
 }
 
 char *get_bvfname_of_index_and_search(CJOB *settings, char *ifafname, char *sfafname) {
     char _bvfname[4096];
+    char *sfabfname = basenameof(sfafname);
+    char *ifabfname = basenameof(ifafname);
     sprintf(_bvfname, "%s/%s_in_%s.bv", settings->output_directory, 
-            basenameof(sfafname), basenameof(ifafname));
+            basenameof(sfabfname), basenameof(ifabfname));
+    free(sfabfname);
+    free(ifabfname);
     char *bvfname = calloc(strlen(_bvfname) + 1, sizeof(char));
     strcpy(bvfname, _bvfname);
     return bvfname;

@@ -36,15 +36,23 @@ int file_exists(char *fname) {
 // Yes, I know there's a memory leak. I'll fix it eventually, but the amount
 // leaked is only a few hundred bytes so it's not a huge priority.
 char *basenameof(char *path) {
-    char *p = calloc(strlen(path), sizeof(char));
+    char *p = calloc(strlen(path) + 1, sizeof(char));
     strcpy(p, path);
-    return basename(p);
+    char *tmp = basename(p);
+    char *bname = calloc(strlen(tmp) + 1, sizeof(char));
+    strcpy(bname, tmp);
+    free(p);
+    return bname;
 }
 
 char *dirnameof(char *path) {
-    char *p = calloc(strlen(path), sizeof(char));
+    char *p = calloc(strlen(path) + 1, sizeof(char));
     strcpy(p, path);
-    return dirname(p);
+    char *tmp = dirname(p);
+    char *dname = calloc(strlen(tmp) + 1, sizeof(char));
+    strcpy(dname, tmp);
+    free(p);
+    return dname;
 }
 
 int mkdirp(char *dname) {
@@ -55,7 +63,9 @@ int mkdirp(char *dname) {
             if(DEBUG_LEVEL >= 2) {
                 printf("Directory %s does not exist, creating it.\n", dname);
             }
-            mkdirp(dirnameof(dname));
+            char *ddname = dirnameof(dname);
+            mkdirp(ddname);
+            free(ddname);
             err = mkdir(dname, 0777);
             if(err == -1) {
                 printf("%s Exists\n", dname);
@@ -81,7 +91,7 @@ int mkdirp(char *dname) {
             return -1;
         }
     } else {
-        perror("wat");
+        perror("stat:");
         exit(EXIT_FAILURE);
     }
 }
