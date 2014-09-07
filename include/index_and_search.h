@@ -159,6 +159,7 @@ BITVEC *search_file_in_hash(CJOB *settings, HASH *h, char *fafname) {
             readnum++;
         }
     }
+    fclose(fafp);
     free(bvfname);
     free(bv);
     return sbv;
