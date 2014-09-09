@@ -6,6 +6,7 @@
 #include "commet_job.h"
 #include "filter_reads.h"
 #include "shame.h"
+#include "gnuplot_location.h"
 
 BITVEC **get_filter_bvs(CJOB *settings, READSET *set) {
     BITVEC **bvs = calloc(set->num_files, sizeof(BITVEC *));
@@ -195,7 +196,7 @@ void print_comparison_percents(CJOB *settings, COUNTER ***shared) {
 
 void print_venn_diagrams(CJOB * settings, COUNTER ***shared) {
     int i = 0, j = 1;
-    FILE *pin = popen("gnuplot -p", "w");
+    FILE *pin = popen(GNUPLOT " -p", "w");
     if(pin == NULL) {
         puts("An error occurred when attempting to open gnuplot.");
         puts("Perhaps you do not have gnuplot installed.");
