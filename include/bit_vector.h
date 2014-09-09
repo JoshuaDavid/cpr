@@ -225,4 +225,14 @@ BITVEC *bv_xor(BITVEC *bva, BITVEC *bvb) {
     return ret;
 }
 
+BITVEC *bv_not(BITVEC *bv) {
+    // Minimum of the lengths, as the rest is zeroed anyway
+    BITVEC *ret = bv_create(bv->num_bits);
+    uintmax_t i = 0;
+    for(i = 0; i < ret->_size; i++) {
+        ret->values[i] = ~bv->values[i];
+    }
+    return ret;
+}
+
 #endif

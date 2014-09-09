@@ -116,6 +116,28 @@ char *get_bvfname_of_index_and_search(CJOB *settings, char *ifafname, char *sfaf
     return bvfname;
 }
 
+char *get_bvfname_of_file_in_set(CJOB *settings, char *sfafname, READSET *set) {
+    char _bvfname[4096];
+    char *sfabfname = basenameof(sfafname);
+    sprintf(_bvfname, "%s/%s_in_set_%s.bv", settings->output_directory, 
+            basenameof(sfabfname), set->name);
+    free(sfabfname);
+    char *bvfname = calloc(strlen(_bvfname) + 1, sizeof(char));
+    strcpy(bvfname, _bvfname);
+    return bvfname;
+}
+
+char *get_bvfname_of_file_not_in_set(CJOB *settings, char *sfafname, READSET *set) {
+    char _bvfname[4096];
+    char *sfabfname = basenameof(sfafname);
+    sprintf(_bvfname, "%s/%s_not_in_set_%s.bv", settings->output_directory, 
+            basenameof(sfabfname), set->name);
+    free(sfabfname);
+    char *bvfname = calloc(strlen(_bvfname) + 1, sizeof(char));
+    strcpy(bvfname, _bvfname);
+    return bvfname;
+}
+
 void create_all_filter_files_serial(CJOB *settings) {
     int i = 0, j = 0;
     READSET **sets = settings->sets;

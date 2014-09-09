@@ -1,6 +1,7 @@
 *
 !*.c
 !*.h
+!bin
 !src
 !src/*.c
 !include
