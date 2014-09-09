@@ -193,6 +193,61 @@ void print_comparison_percents(CJOB *settings, COUNTER ***shared) {
     }
 }
 
+void print_venn_diagrams(CJOB * settings, COUNTER ***shared) {
+    int i = 0, j = 1;
+    FILE *pin = popen("gnuplot -p", "w");
+    if(pin == NULL) {
+        puts("An error occurred when attempting to open gnuplot.");
+        puts("Perhaps you do not have gnuplot installed.");
+        perror("popen");
+    }
+    READSET **sets = settings->sets;
+    fprintf(pin, "set title \"\"\n",
+            sets[i]->name, sets[j]->name);
+    fprintf(pin, "unset border\n");
+    fprintf(pin, "unset xtics\n");
+    fprintf(pin, "unset ytics\n");
+
+    fprintf(pin, "set size ratio -1\n");
+    fprintf(pin, "set xrange [-2:2]\n");
+    fprintf(pin, "set yrange [-2:3]\n");
+
+    fprintf(pin, "set angles degrees\n");
+    fprintf(pin, "set object 1 circle at -1, 0  size 2 fc rgb \"cyan\"\n");
+    fprintf(pin, "set object 2 circle at  1, 0  size 2 fc rgb \"yellow\"\n");
+
+    fprintf(pin, "set object 1 fillstyle transparent solid 0.25 noborder\n");
+    fprintf(pin, "set object 2 fillstyle transparent solid 0.25 noborder\n");
+
+    char *fmt = "set label \"%s\"     at -%f, %f center font \"D, 8\"\n";
+    char *titlefmt = "set label \"Set %s and Set %s\" at -%f, %f center font \"D, 12\"\n";
+    fprintf(pin, titlefmt, sets[i]->name, sets[j]->name, 0.0, 3.0);
+    fprintf(pin, fmt, sets[i]->name, -1.8, 2.4);
+    fprintf(pin, fmt, "not in",                -1.8, 2.2);
+    fprintf(pin, fmt, sets[j]->name, -1.8, 2.0);
+
+    fprintf(pin, fmt, sets[i]->name,  0.0, 2.4);
+    fprintf(pin, fmt, "in",                     0.0, 2.2);
+    fprintf(pin, fmt, sets[j]->name,  0.0, 2.0);
+
+    fprintf(pin, fmt, sets[j]->name,  1.8, 2.4);
+    fprintf(pin, fmt, "not in",                 1.8, 2.2);
+    fprintf(pin, fmt, sets[i]->name,  1.8, 2.0);
+
+    fprintf(pin, "plot -4 notitle\n");
+    /*
+       fprintf(pin, "plot '-' using 1:2:3:4 with circles lc rgb variable fs transparent solid\n");
+
+       fprintf(pin,   "0.15 noborder\n");
+       fprintf(pin,     "2  2  4 %i\n", 0xFF0000);
+       fprintf(pin,     "-2 2  5 %i\n", 0xFFFF00);
+       fprintf(pin,     "0  -2 5 %i\n", 0x0000FF);
+       fprintf(pin,   "e\n");
+
+*/
+    fclose(pin);
+}
+
 void print_comparison(CJOB *settings, READSET *set_a, READSET *set_b) {
     BITVEC ***comparisons = get_comparison_bvs(settings, set_a, set_b);
     BITVEC **bvs_a = get_filter_bvs(settings, set_a);
