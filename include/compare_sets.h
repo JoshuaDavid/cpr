@@ -305,8 +305,8 @@ void make_venn_diagram(CJOB * settings, COUNTER ***shared, int i, int j) {
     draw_circle(pin, x_a, 0.0, r_a, colors[i]);
     draw_circle(pin, x_b, 0.0, r_b, colors[j]);
 
-    char *fmt = "set label \"%s\"     at -%f, %f center font \"Helvetica, 8\"\n";
-    char *titlefmt = "set label \"Set %s and Set %s\" at -%f, %f center font \"Helvetica, 12\"\n";
+    char *fmt = "set label \"%s\"     at -%f, %f center font \"Arial, 8\"\n";
+    char *titlefmt = "set label \"Set %s and Set %s\" at -%f, %f center font \"Arial, 12\"\n";
     fprintf(pin, titlefmt, sets[i]->name, sets[j]->name, 0.0, 3.0);
 
     fprintf(pin, fmt, sets[i]->name, -2.0, 2.4);
@@ -331,7 +331,7 @@ void make_venn_diagram(CJOB * settings, COUNTER ***shared, int i, int j) {
     sprintf(b_not_in_a, "%ji reads", shared[j][i]->f);
     fprintf(pin, fmt, b_not_in_a,     2.0, 1.6);
 
-    fprintf(pin, "set terminal png size 500,500 enhanced font \"Helvetica,8\"\n");
+    fprintf(pin, "set terminal png size 500,500 enhanced font \"Arial,8\"\n");
     fprintf(pin, "set output \"%s/venn_%s_vs_%s.png\"\n",
             settings->output_directory, sets[i]->name, sets[j]->name);
     fprintf(pin, "plot -4 notitle\n");
