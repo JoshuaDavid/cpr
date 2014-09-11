@@ -20,6 +20,8 @@
 #include <errno.h>
 #include "debug.h"
 
+#define PI 3.14159265358979
+
 #define VERIFY_NONEMPTY(arr) if(arr[0] == NULL) {\
     fprintf(stderr, "Array is empty\n");\
     exit(EXIT_FAILURE);\

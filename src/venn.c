@@ -8,6 +8,6 @@
 int main(int argc, char **argv) {
     CJOB *settings = get_settings(argc, argv);
     COUNTER ***shared = get_raw_comparison_matrix(settings);
-    print_venn_diagrams(settings, shared);
+    make_venn_diagrams(settings, shared);
     return EXIT_SUCCESS;
 }
