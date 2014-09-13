@@ -23,8 +23,13 @@ HASH {
 };
 
 void *shared_calloc(size_t nmemb, size_t size) {
+#ifdef MAP_ANON
+    void *mem = mmap(NULL, nmemb * size, PROT_READ | PROT_WRITE, 
+                     MAP_SHARED | MAP_ANON, -1, 0);
+#else
     void *mem = mmap(NULL, nmemb * size, PROT_READ | PROT_WRITE, 
                      MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+#endif
     memset(mem, 0, nmemb * size);
     return mem;
 }

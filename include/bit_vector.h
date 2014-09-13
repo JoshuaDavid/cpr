@@ -49,8 +49,13 @@ BITVEC *bv_create(uintmax_t num_bits) {
     if(num_bits % CHAR_BIT > 0) {
         num_bytes += 1;
     }
+#ifdef MAP_ANON
+    char *values = mmap(NULL, num_bytes, PROT_READ | PROT_WRITE,
+            MAP_PRIVATE | MAP_ANON, -1, 0);
+#else
     char *values = mmap(NULL, num_bytes, PROT_READ | PROT_WRITE,
             MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#endif
     uintmax_t i = 0;
     for(i = 0; i < num_bytes; i++) {
         values[i] = 0;
