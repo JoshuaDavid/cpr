@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include "compare_sets.h"
 #include "shame.h"
+#include "debug.h"
+
+int DEBUG_LEVEL=0;
 
 int main(int argc, char **argv) {
     CJOB *settings = get_settings(argc, argv);
