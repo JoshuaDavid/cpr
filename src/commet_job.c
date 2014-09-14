@@ -8,6 +8,8 @@
 #include "debug.h"
 #include "commet_job.h"
 
+int DEBUG_LEVEL=0;
+
 READSET **read_sets_file(char *filename) {
     READSET **sets = calloc(256, sizeof(READSET));
     FILE *fp;
