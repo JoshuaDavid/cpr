@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include "compare_sets.h"
 #include "shame.h"
-#include "debug.h"
 
 int DEBUG_LEVEL=0;
 
