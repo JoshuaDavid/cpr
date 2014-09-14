@@ -60,7 +60,7 @@ BITVEC *bv_read_from_file(char *bvfname) {
     if(fsize % pagesize != 0) {
         fsize += pagesize - fsize % pagesize;
         if(fsize != size_bv) {
-            printf("Expanding %s(%i) from %jx bytes to %jx bytes.\n", bvfname, bvfd, size_bv, fsize);
+            DBG(1) printf("Expanding %s(%i) from %jx bytes to %jx bytes.\n", bvfname, bvfd, size_bv, fsize);
             if(0 != ftruncate(bvfd, fsize)) {
                 perror("Could not resize file. ftruncate");
                 exit(EXIT_FAILURE);
