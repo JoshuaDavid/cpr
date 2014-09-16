@@ -2,6 +2,7 @@
 #define BIT_VECTOR_H
 
 #include <stdlib.h>
+#include <stdint.h> /* for uintmax_t */
 
 struct bit_vector {
     char    *values;

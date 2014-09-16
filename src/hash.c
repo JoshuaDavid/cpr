@@ -7,8 +7,11 @@
 #include <sys/mman.h>
 
 // Handle MacOS's alternate definition of mman.h.
+// And the fact that Ubuntu seems to define MAP_ANON
 #ifdef MAP_ANON
+#ifndef MAP_ANONYMOUS 
 #define MAP_ANONYMOUS (MAP_ANON)
+#endif
 #endif
 
 // The 10-trillionth prime -- it seems unlikely that a hash will be over 320Tb

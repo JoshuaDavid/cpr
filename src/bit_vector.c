@@ -18,8 +18,11 @@
 #include "shame.h"
 
 // Handle MacOS mman providing MAP_ANON instead of MAP_ANONYMOUS
+// And the fact that Ubuntu seems to define MAP_ANON
 #ifdef MAP_ANON
+#ifndef MAP_ANONYMOUS 
 #define MAP_ANONYMOUS (MAP_ANON)
+#endif
 #endif
 
 // Consistent naming scheme
