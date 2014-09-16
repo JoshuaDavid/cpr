@@ -6,6 +6,39 @@
 #include "compare_sets.h"
 #include <math.h>  // for M_PI
 
+
+#define FLTMAT struct float_matrix
+
+struct float_matrix {
+    int rows;
+    int cols;
+    float **values;
+};
+
+FLTMAT *fm_create(int rows, int cols) {
+    FLTMAT *fm = calloc(1, sizeof(FLTMAT));
+    fm->rows = rows;
+    fm->cols = cols;
+    int i = 0, j = 0;
+    fm->values = calloc(rows, sizeof(float *));
+    for(i = 0; i < rows; i++) {
+        fm->values[i] = calloc(cols, sizeof(float));
+        for(j = 0; j < cols; j++) {
+            fm->values[i][j] = 0.0;
+        }
+    }
+    return fm;
+}
+
+void fm_destroy(FLTMAT *fm) {
+    int i = 0, j = 0;
+    for(i = 0; i < fm->rows; i++) {
+        free(fm->values[i]);
+    }
+    free(fm->values);
+    free(fm);
+}
+
 BITVEC **get_filter_bvs(CJOB *settings, READSET *set) {
     BITVEC **bvs = calloc(set->num_files, sizeof(BITVEC *));
     uintmax_t i = 0;
@@ -65,19 +98,19 @@ void create_in_set_bvfiles_for_one_file(CJOB *settings, char *sfafname, READSET 
     }
 }
 
-COUNTER *compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
-    if(DEBUG_LEVEL >= 2) printf("Comparing sets %s and %s.\n", set_a->name, set_b->name);
-    BITVEC **bvs_a = get_filter_bvs(settings, set_a);
-    BITVEC **bvs_b = get_filter_bvs(settings, set_b);
+COUNTER *compare_two_sets(CJOB *settings, READSET *setsrch, READSET *setindx) {
+    if(DEBUG_LEVEL >= 2) printf("Comparing sets %s and %s.\n", setsrch->name, setindx->name);
+    BITVEC **bvs_a = get_filter_bvs(settings, setsrch);
+    BITVEC **bvs_b = get_filter_bvs(settings, setindx);
     VERIFY_NONEMPTY(bvs_a);
     uintmax_t i = 0, j = 0;
     COUNTER *shared = calloc(1, sizeof(COUNTER));
-    for(i = 0; i < set_a->num_files; i++) {
-        char *sfafname  = set_a->filenames[i];
+    for(i = 0; i < setsrch->num_files; i++) {
+        char *sfafname  = setsrch->filenames[i];
         char *sbvfname  = get_bvfname_from_one_fafname(settings, sfafname);
-        char *insetbvfname = get_bvfname_of_file_in_set(settings, sfafname, set_b);
+        char *insetbvfname = get_bvfname_of_file_in_set(settings, sfafname, setindx);
 
-        create_in_set_bvfiles_for_one_file(settings, sfafname, set_b);
+        create_in_set_bvfiles_for_one_file(settings, sfafname, setindx);
 
         BITVEC *sbv  = bv_read_from_file(sbvfname);
         BITVEC *insetbv = bv_read_from_file(insetbvfname);
@@ -95,8 +128,8 @@ COUNTER *compare_two_sets(CJOB *settings, READSET *set_a, READSET *set_b) {
         bv_destroy(insetbv);
     }
     if(DEBUG_LEVEL >= 1) {
-        printf("%s     in %s: %ju\n", set_a->name, set_b->name, shared->t);
-        printf("%s NOT in %s: %ju\n", set_a->name, set_b->name, shared->f);
+        printf("%s     in %s: %ju\n", setsrch->name, setindx->name, shared->t);
+        printf("%s NOT in %s: %ju\n", setsrch->name, setindx->name, shared->f);
         puts("");
     }
     return shared;
@@ -172,6 +205,67 @@ COUNTER ***get_raw_comparison_matrix(CJOB *settings) {
     return shared;
 }
 
+FLTMAT *expected_similarity(CJOB *settings, COUNTER ***shared) {
+    FLTMAT *expected = fm_create(settings->num_sets, settings->num_sets);
+    int i = 0, j = 0;
+    uintmax_t totalintersects = 0;
+    uintmax_t totalshared = 0;
+    for(i = 0; i < settings->num_sets; i++) {
+        for(j = 0; j < settings->num_sets; j++) {
+            if(i != j) {
+                uintmax_t n_in_set_i = shared[i][j]->t + shared[i][j]->f;
+                uintmax_t n_in_set_j = shared[j][i]->t + shared[j][i]->f;
+                totalintersects += n_in_set_i * n_in_set_j;
+                totalshared  += shared[i][j]->t;
+            }
+        }
+    }
+    for(i = 0; i < settings->num_sets; i++) {
+        for(j = 0; j < settings->num_sets; j++) {
+            if(i != j) {
+                uintmax_t n_in_set_i = shared[i][j]->t + shared[i][j]->f;
+                uintmax_t n_in_set_j = shared[j][i]->t + shared[j][i]->f;
+                uintmax_t intersects = n_in_set_i * n_in_set_j;
+                float expectedshared = (float)(totalshared * intersects) / totalintersects;
+                expected->values[i][j] = expectedshared;
+            } else {
+                uintmax_t n_in_set_i = shared[i][j]->t + shared[i][j]->f;
+                expected->values[i][j] = (float)n_in_set_i;
+            }
+        }
+    }
+    return expected;
+}
+
+FLTMAT *normalized_similarity(CJOB *settings, COUNTER ***shared) {
+    int i = 0, j = 0;
+    FLTMAT *norm_sim = fm_create(settings->num_sets, settings->num_sets);
+    FLTMAT *expected = expected_similarity(settings, shared);
+    for(i = 0; i < settings->num_sets; i++) {
+        for(j = 0; j < settings->num_sets; j++) {
+            norm_sim->values[i][j] = (float) shared[i][j]->t / expected->values[i][j];
+        }
+    }
+    fm_destroy(expected);
+    return norm_sim;
+}
+
+void print_normalized_similarity(CJOB *settings, COUNTER ***shared) {
+    int i = 0, j = 0;
+    FLTMAT *normalized = normalized_similarity(settings, shared);
+    printf(" ");
+    for(i = 0; i < settings->num_sets; i++) {
+        printf(";%s", settings->sets[i]->name);
+    }
+    printf("\n");
+    for(i = 0; i < settings->num_sets; i++) {
+        printf("%s", settings->sets[i]->name);
+        for(j = 0; j < settings->num_sets; j++) {
+            printf(";%4f", normalized->values[i][j]);
+        }
+        printf("\n");
+    }
+}
 void print_comparison_percents(CJOB *settings, COUNTER ***shared) {
     int i = 0, j = 0;
 
@@ -302,8 +396,8 @@ void make_venn_diagram(CJOB * settings, COUNTER ***shared, int i, int j) {
     draw_circle(pin, x_a, 0.0, r_a, colors[i]);
     draw_circle(pin, x_b, 0.0, r_b, colors[j]);
 
-    char *fmt = "set label \"%s\"     at -%f, %f center font \"Arial, 8\"\n";
-    char *titlefmt = "set label \"Set %s and Set %s\" at -%f, %f center font \"Arial, 12\"\n";
+    char *fmt = "set label \"%s\"     at -%f, %f center font \"small\"\n";
+    char *titlefmt = "set label \"Set %s and Set %s\" at -%f, %f center font \"small\"\n";
     fprintf(pin, titlefmt, sets[i]->name, sets[j]->name, 0.0, 3.0);
 
     fprintf(pin, fmt, sets[i]->name, -2.0, 2.4);

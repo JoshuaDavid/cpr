@@ -8,5 +8,6 @@ int main(int argc, char **argv) {
     CJOB *settings = get_settings(argc, argv);
     COUNTER ***shared = get_raw_comparison_matrix(settings);
     print_comparison_percents(settings, shared);
+    print_normalized_similarity(settings, shared);
     return EXIT_SUCCESS;
 }
