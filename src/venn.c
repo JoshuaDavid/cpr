@@ -4,7 +4,6 @@
 #include "compare_sets.h"
 #include "shame.h"
 
-
 int main(int argc, char **argv) {
     CJOB *settings = get_settings(argc, argv);
     COUNTER ***shared = get_raw_comparison_matrix(settings);

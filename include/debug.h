@@ -1,7 +1,7 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-int DEBUG_LEVEL = 0;
+extern int DEBUG_LEVEL;
 
 #define DBG(level) if(DEBUG_LEVEL >= (level))
 
