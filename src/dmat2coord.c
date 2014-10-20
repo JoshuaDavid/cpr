@@ -27,6 +27,7 @@ NETW {
 
 DMAT {
     char **names;
+    int num_sets;
     float **distances;
 };
 
@@ -77,5 +78,35 @@ void addHookeForce(CONN *conn) {
 }
 
 NETW *netwFromDmat(DMAT *dmat) {
-    
+    int i = 0;
+    int j = 0;
+    int nsets = dmat->num_sets;
+    NODE *nodes = calloc(nsets, sizeof(NODE));
+    // Because we don't care about the connection between a node and itself.
+    CONN *conns = calloc(nsets * (nsets - 1), sizeof(CONN));
+
+    // Initialize the nodes
+    for(i = 0; i < nsets; i++) {
+        nodes[i].name = DMAT->names[i];
+        nodes[i].x = (float)(rand() / RAND_MAX);
+        nodes[i].y = (float)(rand() / RAND_MAX);
+        nodes[i].fx = 0;
+        nodes[i].fy = 0;
+    }
+
+    int k = 0;
+    for(i = 0; i < nsets; i++) {
+        for(j = 0; j < nsets; j++) {
+            if(i != j) {
+                conns[k].node1 = nodes[i];
+                conns[k].node2 = nodes[j];
+                conns[k].distance = dmat->distances[i][j];
+            }
+        }
+    }
+
+    NETW *net = calloc(1, sizeof NETW);
+    net->nodes = nodes;
+    net->conns = conns;
+    return net;
 }
