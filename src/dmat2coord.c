@@ -81,8 +81,10 @@ NETW *netwFromDmat(DMAT *dmat) {
     int i = 0;
     int j = 0;
     int nsets = dmat->num_sets;
+    NODE *nodeps = calloc(nsets, sizeof(NODE *));
     NODE *nodes = calloc(nsets, sizeof(NODE));
     // Because we don't care about the connection between a node and itself.
+    CONN *connps = calloc(nsets * (nsets - 1), sizeof(CONN *));
     CONN *conns = calloc(nsets * (nsets - 1), sizeof(CONN));
 
     // Initialize the nodes
@@ -92,21 +94,25 @@ NETW *netwFromDmat(DMAT *dmat) {
         nodes[i].y = (float)(rand() / RAND_MAX);
         nodes[i].fx = 0;
         nodes[i].fy = 0;
+        nodeps[i] = &(nodes[i]);
     }
 
     int k = 0;
     for(i = 0; i < nsets; i++) {
         for(j = 0; j < nsets; j++) {
             if(i != j) {
-                conns[k].node1 = nodes[i];
-                conns[k].node2 = nodes[j];
+                connps[k] = &(conns[k]);
+                conns[k].node1 = nodeps[i];
+                conns[k].node2 = nodeps[j];
                 conns[k].distance = dmat->distances[i][j];
+                k++;
             }
         }
     }
 
     NETW *net = calloc(1, sizeof NETW);
-    net->nodes = nodes;
-    net->conns = conns;
+    net->nodes = nodeps;
+    net->connections = connps;
     return net;
 }
+
