@@ -1,4 +1,4 @@
-all: bin/analyze bin/n_by_n_compare bin/venn bin/dmat2coord bin/better_compare
+all: bin/analyze bin/n_by_n_compare bin/venn bin/dmat2coord
 
 bin/analyze: src/analyze.c src/bit_vector.c src/shame.c src/hash.c src/index_and_search.c src/commet_job.c src/filter_reads.c src/compare_sets.c
 	gcc $+ -g -Iinclude -lm -o bin/analyze
