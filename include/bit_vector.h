@@ -25,5 +25,9 @@ BITVEC *bv_and(BITVEC *bva, BITVEC *bvb);
 BITVEC *bv_or(BITVEC *bva, BITVEC *bvb);
 BITVEC *bv_xor(BITVEC *bva, BITVEC *bvb);
 BITVEC *bv_not(BITVEC *bv);
+// Changes bv_a, so be careful with these.
+void bv_iand(BITVEC *bva, BITVEC *bvb);
+void bv_ior(BITVEC *bva, BITVEC *bvb);
+void bv_ixor(BITVEC *bva, BITVEC *bvb);
 
 #endif

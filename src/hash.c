@@ -43,8 +43,9 @@ HASH *hash_create(uintmax_t size) {
         size = 1024;
     }
     h->capacity = size * 3;
-    h->count = 0;
+    h->used = 0;
     h->values = shared_calloc(h->capacity, sizeof(uintmax_t));
+    h->counts = shared_calloc(h->capacity, sizeof(int));
     if (!h->values) {
         fprintf(stderr, "%s", "Cannot create hash: Out of memory\n");
         exit(ENOMEM);
@@ -67,14 +68,15 @@ void hash_insert(HASH *h, uintmax_t value) {
         key = (key + 1) % h->capacity;
     }
     h->values[key] = value;
-    h->count++;
-    if (h->count * 2 > h->capacity) {
+    h->counts[key] += 1;
+    h->used++;
+    if (h->used * 2 > h->capacity) {
         fprintf(stderr, "Hash too full. Aborting.\n");
         exit(ENOMEM);
     }
 }
 
-int  hash_lookup(HASH *h, uintmax_t value) {
+int hash_lookup(HASH *h, uintmax_t value) {
     if (h == NULL) {
         perror("hash_lookup was passed an empty hash");
         exit(EXIT_FAILURE);
@@ -86,7 +88,7 @@ int  hash_lookup(HASH *h, uintmax_t value) {
     uintmax_t key = (value % prime_1e13) % h->capacity;
     while (h->values[key]) {
         if (h->values[key] == value) {
-            return 1;
+            return h->counts[key];
         } else {
             key = (key + 1) % h->capacity;
         }

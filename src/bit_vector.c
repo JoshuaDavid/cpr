@@ -215,3 +215,33 @@ BITVEC *bv_not(BITVEC *bv) {
     }
     return ret;
 }
+
+void bv_ior(BITVEC *bva, BITVEC *bvb) {
+    // Minimum of the lengths, as the rest is zeroed anyway
+    uintmax_t num_bits = bva->num_bits < bvb->num_bits ? 
+                        bva->num_bits : bvb->num_bits;
+    uintmax_t i = 0;
+    for(i = 0; i < num_bits; i++) {
+        bva->values[i] = bva->values[i] | bvb->values[i];
+    }
+}
+
+void bv_iand(BITVEC *bva, BITVEC *bvb) {
+    // Minimum of the lengths, as the rest is zeroed anyway
+    uintmax_t num_bits = bva->num_bits < bvb->num_bits ? 
+                        bva->num_bits : bvb->num_bits;
+    uintmax_t i = 0;
+    for(i = 0; i < num_bits; i++) {
+        bva->values[i] = bva->values[i] & bvb->values[i];
+    }
+}
+
+void bv_ixor(BITVEC *bva, BITVEC *bvb) {
+    // Minimum of the lengths, as the rest is zeroed anyway
+    uintmax_t num_bits = bva->num_bits < bvb->num_bits ? 
+                        bva->num_bits : bvb->num_bits;
+    uintmax_t i = 0;
+    for(i = 0; i < num_bits; i++) {
+        bva->values[i] = bva->values[i] ^ bvb->values[i];
+    }
+}
