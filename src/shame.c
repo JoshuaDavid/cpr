@@ -27,6 +27,22 @@ char *basenameof(char *path) {
     return bname;
 }
 
+int is_base(char b) {
+    switch(b) {
+        case 'a':
+        case 'c':
+        case 'g':
+        case 't':
+        case 'A':
+        case 'C':
+        case 'G':
+        case 'T':
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 char *dirnameof(char *path) {
     char *p = calloc(strlen(path) + 1, sizeof(char));
     strcpy(p, path);

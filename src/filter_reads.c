@@ -49,7 +49,7 @@ BITVEC *filter_reads(CJOB *settings, char *fafname) {
     char read[65536];
     uintmax_t num_lines = 0;
     while(NULL != fgets(read, sizeof(read), fp)) {
-        if(read[0] == '>') {
+        if(!is_base(read[0])) {
             // Name of read, ignore
         } else {
             num_lines++;
@@ -59,7 +59,7 @@ BITVEC *filter_reads(CJOB *settings, char *fafname) {
     BITVEC *bv = bv_create(num_lines);
     uintmax_t readnum = 0;
     while(NULL != fgets(read, sizeof(read), fp)) {
-        if(read[0] == '>') {
+        if(!is_base(read[0])) {
             // Name of read, ignore
         } else {
             if(strlen(read) < settings->min_length_of_read) {

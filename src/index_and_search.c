@@ -22,9 +22,8 @@ uintmax_t get_num_kmers(CJOB *settings, char *fafname) {
     uintmax_t num_kmers = 0;
     uintmax_t num_lines = 0;
     // For some reason, vim folds wrong if I inline this curly brace :/
-    while(NULL != fgets(read, sizeof(read), fafp)) 
-    {
-        if(read[0] != '>') {
+    while(NULL != fgets(read, sizeof(read), fafp)) {
+        if(is_base(read[0])) {
             if(bv_get(bv, current_read)) {
                 int len = strlen(read);
                 if(len >= kmer_size) {
@@ -121,7 +120,7 @@ HASH *index_from_file(CJOB *settings, char *fafname) {
     int readnum = 0;
     struct bit_vector *bv = bv_read_from_file(bvfname);
     while(NULL != fgets(read, sizeof(read), fafp)) {
-        if(read[0] != '>') {
+        if(is_base(read[0])) {
             if(bv_get(bv, readnum)) {
                 index_read_into_hash(settings, h, read);
             }
@@ -141,7 +140,7 @@ BITVEC *search_file_in_hash(CJOB *settings, HASH *h, char *fafname) {
     struct bit_vector *bv = bv_read_from_file(bvfname);
     struct bit_vector *sbv = bv_create(bv->num_bits);
     while(NULL != fgets(read, sizeof(read), fafp)) {
-        if(read[0] != '>') {
+        if(is_base(read[0])) {
             if(bv_get(bv, readnum)) {
                 COUNTER *c = search_read_in_hash(settings, h, read);
                 if(c->t >= settings->min_shared_kmers) {
