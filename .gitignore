@@ -9,5 +9,6 @@
 !.gitignore
 !Makefile
 !README
+!README.md
 !LICENSE
 include/gnuplot_location.h

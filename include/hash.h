@@ -12,8 +12,9 @@
 
 HASH {
     uintmax_t capacity;
-    uintmax_t count;
+    uintmax_t used;
     uintmax_t *values;
+    int *counts;
 };
 
 HASH *hash_create (uintmax_t size);

@@ -55,6 +55,14 @@ uintmax_t hash_of_base(char b) {
     }
 }
 
+uintmax_t count_reads(CJOB *settings, char *fafname) {
+    char *bvfname = get_bvfname_from_one_fafname(settings, fafname);
+    struct bit_vector *bv = bv_read_from_file(bvfname);
+    uintmax_t count = bv_count_bits(bv);
+    bv_destroy(bv);
+    return count;
+}
+
 uintmax_t hash_of_kmer(char *read, int kmer_size) {
     uintmax_t mask = kmer_mask(kmer_size);
     uintmax_t value = 0;

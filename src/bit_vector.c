@@ -1,5 +1,4 @@
 #include "bit_vector.h"
-
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
@@ -214,4 +213,41 @@ BITVEC *bv_not(BITVEC *bv) {
         ret->values[i] = ~bv->values[i];
     }
     return ret;
+}
+
+void bv_ior(BITVEC *bva, BITVEC *bvb) {
+    // Minimum of the lengths, as the rest is zeroed anyway
+    uintmax_t num_bits = bva->num_bits < bvb->num_bits ? 
+                        bva->num_bits : bvb->num_bits;
+    uintmax_t i = 0;
+    for(i = 0; i < num_bits / CHAR_BIT; i++) {
+        bva->values[i] = bva->values[i] | bvb->values[i];
+    }
+}
+
+void bv_iand(BITVEC *bva, BITVEC *bvb) {
+    // Minimum of the lengths, as the rest is zeroed anyway
+    uintmax_t num_bits = bva->num_bits < bvb->num_bits ? 
+                        bva->num_bits : bvb->num_bits;
+    uintmax_t i = 0;
+    for(i = 0; i < num_bits / CHAR_BIT; i++) {
+        bva->values[i] = bva->values[i] & bvb->values[i];
+    }
+}
+
+void bv_ixor(BITVEC *bva, BITVEC *bvb) {
+    // Minimum of the lengths, as the rest is zeroed anyway
+    uintmax_t num_bits = bva->num_bits < bvb->num_bits ? 
+                        bva->num_bits : bvb->num_bits;
+    uintmax_t i = 0;
+    for(i = 0; i < num_bits / CHAR_BIT; i++) {
+        bva->values[i] = bva->values[i] ^ bvb->values[i];
+    }
+}
+
+void bv_inot(BITVEC *bva) {
+    uintmax_t i = 0;
+    for(i = 0; i < bva->num_bits / CHAR_BIT; i++) {
+        bva->values[i] = ~(bva->values[i]);
+    }
 }
