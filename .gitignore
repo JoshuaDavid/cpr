@@ -4,6 +4,7 @@
 !bin
 !src
 !src/*.c
+!src/*.pl
 !include
 !include/*.h
 !.gitignore
